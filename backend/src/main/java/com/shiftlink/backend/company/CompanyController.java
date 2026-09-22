@@ -1,11 +1,14 @@
 package com.shiftlink.backend.company;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,11 +27,15 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<CompanyResponse> create(
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateCompanyRequest request) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
 
         Company company = companyService.create(
             request.name(),
-            request.slug()
+            request.slug(),
+            userId
         );
 
         return ResponseEntity
