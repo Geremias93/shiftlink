@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shiftlink.backend.security.JwtService;
 import com.shiftlink.backend.user.UserAccount;
 
 @RestController
@@ -16,9 +17,14 @@ import com.shiftlink.backend.user.UserAccount;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(
+            AuthService authService,
+            JwtService jwtService) {
+
         this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -38,12 +44,15 @@ public class AuthController {
 
         UserAccount user = authService.login(request);
 
-        return ResponseEntity.ok(
-            new LoginResponse(
-                true,
-                UserResponse.from(user)
-            )
-        );
-    }
+        String accessToken = jwtService.generateToken(user);
 
+        LoginResponse response = new LoginResponse(
+            accessToken,
+            "Bearer",
+            jwtService.getExpirationSeconds(),
+            UserResponse.from(user)
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }

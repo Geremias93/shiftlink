@@ -1,7 +1,9 @@
 package com.shiftlink.backend.auth;
 
 public record LoginResponse(
-    boolean authenticated,
+    String accessToken,
+    String tokenType,
+    long expiresIn,
     UserResponse user
 ) {
 }
