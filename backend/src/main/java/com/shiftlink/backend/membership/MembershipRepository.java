@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MembershipRepository
         extends JpaRepository<Membership, UUID> {
 
-    List<Membership> findByUser_Id(UUID userId);
+    List<Membership> findByUser_IdAndActiveTrue(UUID userId);
 
-    List<Membership> findByCompany_Id(UUID companyId);
+    List<Membership> findByCompany_IdAndActiveTrue(UUID companyId);
 
     boolean existsByUser_IdAndCompany_Id(
         UUID userId,

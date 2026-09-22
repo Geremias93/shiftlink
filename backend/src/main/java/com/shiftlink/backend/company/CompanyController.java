@@ -44,8 +44,13 @@ public class CompanyController {
     }
 
     @GetMapping
-    public List<CompanyResponse> findAll() {
-        return companyService.findAll()
+    public List<CompanyResponse> findAll(
+            @AuthenticationPrincipal Jwt jwt) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        return companyService
+            .findAllForUser(userId)
             .stream()
             .map(CompanyResponse::from)
             .toList();

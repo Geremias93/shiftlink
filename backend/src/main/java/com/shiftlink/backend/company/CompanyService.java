@@ -60,7 +60,13 @@ public class CompanyService {
     }
 
     @Transactional(readOnly = true)
-    public List<Company> findAll() {
-        return companyRepository.findAll();
+    public List<Company> findAllForUser(UUID userId) {
+
+        return membershipRepository
+            .findByUser_IdAndActiveTrue(userId)
+            .stream()
+            .map(Membership::getCompany)
+            .filter(Company::isActive)
+            .toList();
     }
 }
