@@ -3,6 +3,7 @@ package com.shiftlink.backend.common;
 import java.time.OffsetDateTime;
 
 import com.shiftlink.backend.company.DuplicateCompanySlugException;
+import com.shiftlink.backend.auth.DuplicateEmailException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -33,4 +34,25 @@ public class GlobalExceptionHandler {
             .status(status)
             .body(error);
     }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiError> handleDuplicateEmail(
+            DuplicateEmailException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
 }
