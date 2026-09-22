@@ -17,7 +17,7 @@ public class CompanyService {
     @Transactional
     public Company create(String name, String slug) {
         if (companyRepository.existsBySlug(slug)) {
-            throw new IllegalArgumentException("A company with this slug already exists");
+            throw new DuplicateCompanySlugException(slug);
         }
 
         Company company = new Company(name, slug);
