@@ -31,4 +31,19 @@ public class AuthController {
             .status(HttpStatus.CREATED)
             .body(UserResponse.from(user));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request) {
+
+        UserAccount user = authService.login(request);
+
+        return ResponseEntity.ok(
+            new LoginResponse(
+                true,
+                UserResponse.from(user)
+            )
+        );
+    }
+
 }

@@ -52,4 +52,30 @@ public class AuthService {
 
         return userRepository.save(user);
     }
+
+    @Transactional(readOnly = true)
+    public UserAccount login(LoginRequest request) {
+
+        String normalizedEmail = request.email()
+            .trim()
+            .toLowerCase(Locale.ROOT);
+
+        UserAccount user = userRepository
+            .findByEmailIgnoreCase(normalizedEmail)
+            .orElseThrow(InvalidCredentialsException::new);
+
+        if (!user.isActive()) {
+            throw new InvalidCredentialsException();
+        }
+
+        if (!passwordEncoder.matches(
+                request.password(),
+                user.getPasswordHash())) {
+
+            throw new InvalidCredentialsException();
+        }
+
+        return user;
+    }
+
 }
