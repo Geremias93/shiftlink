@@ -142,6 +142,10 @@ function App() {
 
   const [loadingShiftDetail, setLoadingShiftDetail] =
     useState(false)
+
+  const [changingShiftStatus, setChangingShiftStatus] =
+    useState(false)
+
   const [loadingLocationData, setLoadingLocationData] =
     useState(false)
   const [loading, setLoading] = useState(false)
@@ -592,6 +596,164 @@ function App() {
     }
   }
 
+  async function handleStartShift() {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift
+    ) {
+      return
+    }
+
+    setChangingShiftStatus(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/start`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido iniciar el turno',
+        )
+      }
+
+      const data: Shift = await response.json()
+
+      setSelectedShift(data)
+
+      setShifts((current) =>
+        current.map((shift) =>
+          shift.id === data.id ? data : shift,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setChangingShiftStatus(false)
+    }
+  }
+
+  async function handleCompleteShift() {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift
+    ) {
+      return
+    }
+
+    setChangingShiftStatus(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/complete`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido completar el turno',
+        )
+      }
+
+      const data: Shift = await response.json()
+
+      setSelectedShift(data)
+
+      setShifts((current) =>
+        current.map((shift) =>
+          shift.id === data.id ? data : shift,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setChangingShiftStatus(false)
+    }
+  }
+
+  async function handleCancelShift() {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift
+    ) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      '¿Seguro que quieres cancelar este turno?',
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setChangingShiftStatus(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/cancel`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido cancelar el turno',
+        )
+      }
+
+      const data: Shift = await response.json()
+
+      setSelectedShift(data)
+
+      setShifts((current) =>
+        current.map((shift) =>
+          shift.id === data.id ? data : shift,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setChangingShiftStatus(false)
+    }
+  }
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -718,11 +880,50 @@ function App() {
               <h1>{selectedShift.name}</h1>
             </div>
 
-            <span
-              className={`shift-status-badge shift-status-${selectedShift.status.toLowerCase()}`}
-            >
-              {shiftStatusLabels[selectedShift.status]}
-            </span>
+            <div className="shift-detail-actions">
+              <span
+                className={`shift-status-badge shift-status-${selectedShift.status.toLowerCase()}`}
+              >
+                {shiftStatusLabels[selectedShift.status]}
+              </span>
+
+              {selectedShift.status === 'SCHEDULED' && (
+                <button
+                  className="shift-primary-action"
+                  type="button"
+                  disabled={changingShiftStatus}
+                  onClick={handleStartShift}
+                >
+                  {changingShiftStatus
+                    ? 'Iniciando...'
+                    : 'Iniciar turno'}
+                </button>
+              )}
+
+              {selectedShift.status === 'ACTIVE' && (
+                <div className="shift-active-actions">
+                  <button
+                    className="shift-danger-action"
+                    type="button"
+                    disabled={changingShiftStatus}
+                    onClick={handleCancelShift}
+                  >
+                    Cancelar turno
+                  </button>
+
+                  <button
+                    className="shift-primary-action"
+                    type="button"
+                    disabled={changingShiftStatus}
+                    onClick={handleCompleteShift}
+                  >
+                    {changingShiftStatus
+                      ? 'Procesando...'
+                      : 'Completar turno'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="shift-meta-grid">
