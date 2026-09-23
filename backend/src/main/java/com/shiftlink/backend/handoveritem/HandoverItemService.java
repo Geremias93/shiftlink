@@ -10,12 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.shiftlink.backend.handover.Handover;
 import com.shiftlink.backend.handover.HandoverService;
 import com.shiftlink.backend.handover.HandoverStatus;
+import com.shiftlink.backend.handover.HandoverShiftAssignmentRequiredException;
 import com.shiftlink.backend.handover.InvalidHandoverStateException;
 import com.shiftlink.backend.location.LocationService;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
 import com.shiftlink.backend.membership.AuthenticatedUserNotFoundException;
 import com.shiftlink.backend.user.UserAccount;
 import com.shiftlink.backend.user.UserRepository;
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentRepository;
 
 @Service
 public class HandoverItemService {
@@ -24,17 +26,20 @@ public class HandoverItemService {
     private final HandoverService handoverService;
     private final UserRepository userRepository;
     private final LocationService locationService;
+    private final ShiftAssignmentRepository shiftAssignmentRepository;
 
     public HandoverItemService(
             HandoverItemRepository handoverItemRepository,
             HandoverService handoverService,
             UserRepository userRepository,
-            LocationService locationService) {
+            LocationService locationService,
+            ShiftAssignmentRepository shiftAssignmentRepository) {
 
         this.handoverItemRepository = handoverItemRepository;
         this.handoverService = handoverService;
         this.userRepository = userRepository;
         this.locationService = locationService;
+        this.shiftAssignmentRepository = shiftAssignmentRepository;
     }
 
     @Transactional
@@ -139,6 +144,45 @@ public class HandoverItemService {
             );
         }
 
+
+        if (handover.getStatus() == HandoverStatus.DRAFT) {
+
+            if (!handover.getCreatedBy().getId().equals(userId)) {
+
+                throw new HandoverShiftAssignmentRequiredException(
+                    "Solo el creador puede resolver pendientes "
+                    + "mientras el relevo está en borrador"
+                );
+
+            }
+
+        } else {
+
+            if (handover.getTargetShift() == null) {
+
+                throw new HandoverShiftAssignmentRequiredException(
+                    "El relevo no tiene un turno receptor válido"
+                );
+
+            }
+
+            boolean assignedToTargetShift =
+                shiftAssignmentRepository
+                    .existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+                        handover.getTargetShift().getId(),
+                        userId
+                    );
+
+            if (!assignedToTargetShift) {
+
+                throw new HandoverShiftAssignmentRequiredException(
+                    "Debes estar asignado al turno receptor "
+                    + "para resolver este pendiente"
+                );
+
+            }
+
+        }
         UserAccount resolvedBy = userRepository
             .findById(userId)
             .orElseThrow(

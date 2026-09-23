@@ -112,6 +112,39 @@ function App() {
   const [incomingHandovers, setIncomingHandovers] =
     useState<Handover[]>([])
 
+  const [handoverItems, setHandoverItems] =
+    useState<HandoverItem[]>([])
+
+  const [
+    incomingHandoverItems,
+    setIncomingHandoverItems,
+  ] = useState<Record<string, HandoverItem[]>>({})
+
+
+  const [showHandoverItemForm, setShowHandoverItemForm] =
+    useState(false)
+
+  const [handoverItemType, setHandoverItemType] =
+    useState<'TASK' | 'INCIDENT'>('TASK')
+
+  const [handoverItemTitle, setHandoverItemTitle] =
+    useState('')
+
+  const [
+    handoverItemDescription,
+    setHandoverItemDescription,
+  ] = useState('')
+
+  const [
+    handoverItemPriority,
+    setHandoverItemPriority,
+  ] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
+
+  const [savingHandoverItem, setSavingHandoverItem] =
+    useState(false)
+
+
+
   const [showHandoverForm, setShowHandoverForm] =
     useState(false)
 
@@ -135,6 +168,12 @@ function App() {
     acknowledgingHandoverId,
     setAcknowledgingHandoverId,
   ] = useState<string | null>(null)
+
+  const [
+    resolvingHandoverItemId,
+    setResolvingHandoverItemId,
+  ] = useState<string | null>(null)
+
 
 
 
@@ -321,6 +360,7 @@ function App() {
       setAssignments([])
       setOutgoingHandover(null)
       setIncomingHandovers([])
+      setIncomingHandoverItems({})
 
       const headers = {
         Authorization: `Bearer ${token}`,
@@ -359,16 +399,57 @@ function App() {
         const incomingData: Handover[] =
           await incomingResponse.json()
 
+
+        const incomingItemsEntries = await Promise.all(
+          incomingData.map(async (handover) => {
+            const itemsResponse = await fetch(
+              `/api/companies/${companyId}/locations/${locationId}/shifts/${handover.shiftId}/handover/items`,
+              { headers },
+            )
+
+            if (!itemsResponse.ok) {
+              throw new Error(
+                'No se han podido cargar los pendientes recibidos',
+              )
+            }
+
+            const items: HandoverItem[] =
+              await itemsResponse.json()
+
+            return [handover.id, items] as const
+          }),
+        )
+
+        const incomingItemsData =
+          Object.fromEntries(incomingItemsEntries)
+
         let outgoingData: Handover | null = null
+        let handoverItemsData: HandoverItem[] = []
 
         if (outgoingResponse.ok) {
           outgoingData =
             await outgoingResponse.json()
+
+          const itemsResponse = await fetch(
+            `${baseUrl}/handover/items`,
+            { headers },
+          )
+
+          if (!itemsResponse.ok) {
+            throw new Error(
+              'No se han podido cargar los pendientes del relevo',
+            )
+          }
+
+          handoverItemsData =
+            await itemsResponse.json()
         }
 
         setAssignments(assignmentsData)
         setOutgoingHandover(outgoingData)
         setIncomingHandovers(incomingData)
+        setIncomingHandoverItems(incomingItemsData)
+        setHandoverItems(handoverItemsData)
       } catch (err) {
         setError(
           err instanceof Error
@@ -537,6 +618,68 @@ function App() {
       )
     } finally {
       setAcknowledgingHandoverId(null)
+    }
+  }
+
+
+  async function handleResolveIncomingItem(
+    handover: Handover,
+    item: HandoverItem,
+  ) {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation
+    ) {
+      return
+    }
+
+    setResolvingHandoverItemId(item.id)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${handover.shiftId}/handover/items/${item.id}/resolve`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido resolver el pendiente',
+        )
+      }
+
+      const data: HandoverItem = await response.json()
+
+      setIncomingHandoverItems((current) => ({
+        ...current,
+        [handover.id]: (
+          current[handover.id] ?? []
+        ).map((currentItem) =>
+          currentItem.id === data.id
+            ? data
+            : currentItem,
+        ),
+      }))
+
+      setOpenItems((current) =>
+        current.filter(
+          (currentItem) => currentItem.id !== data.id,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setResolvingHandoverItemId(null)
     }
   }
 
@@ -751,6 +894,75 @@ function App() {
       )
     } finally {
       setChangingShiftStatus(false)
+    }
+  }
+
+  async function handleCreateHandoverItem(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !outgoingHandover ||
+      outgoingHandover.status !== 'DRAFT' ||
+      !handoverItemTitle.trim()
+    ) {
+      return
+    }
+
+    setSavingHandoverItem(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/items`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: handoverItemType,
+            title: handoverItemTitle.trim(),
+            description:
+              handoverItemDescription.trim() || null,
+            priority: handoverItemPriority,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido añadir el pendiente',
+        )
+      }
+
+      const data: HandoverItem =
+        await response.json()
+
+      setHandoverItems((current) => [
+        ...current,
+        data,
+      ])
+
+      setShowHandoverItemForm(false)
+      setHandoverItemType('TASK')
+      setHandoverItemTitle('')
+      setHandoverItemDescription('')
+      setHandoverItemPriority('MEDIUM')
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSavingHandoverItem(false)
     }
   }
 
@@ -1211,6 +1423,209 @@ function App() {
                       </p>
                     </div>
 
+                    <div className="handover-items-block">
+                      <div className="handover-items-heading">
+                        <span>Pendientes del relevo</span>
+
+                        <strong>
+                          {handoverItems.length}
+                        </strong>
+                      </div>
+
+                      {handoverItems.length === 0 ? (
+                        <p className="handover-items-empty">
+                          No hay tareas ni incidencias añadidas.
+                        </p>
+                      ) : (
+                        <div className="handover-items-list">
+                          {handoverItems.map((item) => (
+                            <article
+                              className="handover-item-card"
+                              key={item.id}
+                            >
+                              <div className="handover-item-top">
+                                <span>
+                                  {item.type === 'TASK'
+                                    ? 'Tarea'
+                                    : 'Incidencia'}
+                                </span>
+
+                                <span>
+                                  {item.priority === 'HIGH'
+                                    ? 'Prioridad alta'
+                                    : item.priority === 'LOW'
+                                      ? 'Prioridad baja'
+                                      : 'Prioridad media'}
+                                </span>
+                              </div>
+
+                              <strong>{item.title}</strong>
+
+                              {item.description && (
+                                <p>{item.description}</p>
+                              )}
+
+                              <small>
+                                {item.status === 'OPEN'
+                                  ? 'Pendiente'
+                                  : 'Resuelto'}
+                              </small>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                      {outgoingHandover.status === 'DRAFT' && (
+                        <div className="handover-item-create">
+                          {!showHandoverItemForm ? (
+                            <button
+                              className="shift-secondary-action"
+                              type="button"
+                              onClick={() => {
+                                setShowHandoverItemForm(true)
+                                setShowHandoverForm(false)
+                              }}
+                            >
+                              + Añadir pendiente
+                            </button>
+                          ) : (
+                            <form
+                              className="handover-item-form"
+                              onSubmit={handleCreateHandoverItem}
+                            >
+                              <div className="handover-form-heading">
+                                <strong>
+                                  Nuevo pendiente
+                                </strong>
+                                <span>
+                                  Añade una tarea o incidencia
+                                  que deba conocer el siguiente
+                                  turno.
+                                </span>
+                              </div>
+
+                              <div className="handover-item-form-row">
+                                <label className="handover-field">
+                                  <span>Tipo</span>
+
+                                  <select
+                                    value={handoverItemType}
+                                    onChange={(event) =>
+                                      setHandoverItemType(
+                                        event.target.value as
+                                          | 'TASK'
+                                          | 'INCIDENT',
+                                      )
+                                    }
+                                  >
+                                    <option value="TASK">
+                                      Tarea
+                                    </option>
+                                    <option value="INCIDENT">
+                                      Incidencia
+                                    </option>
+                                  </select>
+                                </label>
+
+                                <label className="handover-field">
+                                  <span>Prioridad</span>
+
+                                  <select
+                                    value={handoverItemPriority}
+                                    onChange={(event) =>
+                                      setHandoverItemPriority(
+                                        event.target.value as
+                                          | 'LOW'
+                                          | 'MEDIUM'
+                                          | 'HIGH',
+                                      )
+                                    }
+                                  >
+                                    <option value="LOW">
+                                      Baja
+                                    </option>
+                                    <option value="MEDIUM">
+                                      Media
+                                    </option>
+                                    <option value="HIGH">
+                                      Alta
+                                    </option>
+                                  </select>
+                                </label>
+                              </div>
+
+                              <label className="handover-field">
+                                <span>Título</span>
+
+                                <input
+                                  type="text"
+                                  maxLength={160}
+                                  value={handoverItemTitle}
+                                  onChange={(event) =>
+                                    setHandoverItemTitle(
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="Ej.: Reponer vasos"
+                                  required
+                                />
+                              </label>
+
+                              <label className="handover-field">
+                                <span>Descripción</span>
+
+                                <textarea
+                                  rows={4}
+                                  maxLength={5000}
+                                  value={
+                                    handoverItemDescription
+                                  }
+                                  onChange={(event) =>
+                                    setHandoverItemDescription(
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="Añade el contexto necesario..."
+                                />
+                              </label>
+
+                              <div className="handover-form-actions">
+                                <button
+                                  className="shift-secondary-action"
+                                  type="button"
+                                  onClick={() => {
+                                    setShowHandoverItemForm(false)
+                                    setHandoverItemType('TASK')
+                                    setHandoverItemTitle('')
+                                    setHandoverItemDescription('')
+                                    setHandoverItemPriority(
+                                      'MEDIUM',
+                                    )
+                                  }}
+                                >
+                                  Cancelar
+                                </button>
+
+                                <button
+                                  className="shift-primary-action"
+                                  type="submit"
+                                  disabled={
+                                    !handoverItemTitle.trim() ||
+                                    savingHandoverItem
+                                  }
+                                >
+                                  {savingHandoverItem
+                                    ? 'Guardando...'
+                                    : 'Guardar pendiente'}
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+
+
                     {outgoingHandover.status === 'DRAFT' && (
                       <>
                         {!showHandoverForm && (
@@ -1375,6 +1790,97 @@ function App() {
                           {handover.notes ||
                             'Sin notas añadidas.'}
                         </p>
+                      </div>
+
+
+                      <div className="handover-items-block">
+                        <div className="handover-items-heading">
+                          <span>Pendientes del relevo</span>
+
+                          <strong>
+                            {
+                              (
+                                incomingHandoverItems[
+                                  handover.id
+                                ] ?? []
+                              ).length
+                            }
+                          </strong>
+                        </div>
+
+                        {(
+                          incomingHandoverItems[
+                            handover.id
+                          ] ?? []
+                        ).length === 0 ? (
+                          <p className="handover-items-empty">
+                            No hay tareas ni incidencias en este
+                            relevo.
+                          </p>
+                        ) : (
+                          <div className="handover-items-list">
+                            {(
+                              incomingHandoverItems[
+                                handover.id
+                              ] ?? []
+                            ).map((item) => (
+                              <article
+                                className="handover-item-card"
+                                key={item.id}
+                              >
+                                <div className="handover-item-top">
+                                  <span>
+                                    {item.type === 'TASK'
+                                      ? 'Tarea'
+                                      : 'Incidencia'}
+                                  </span>
+
+                                  <span>
+                                    {item.priority === 'HIGH'
+                                      ? 'Prioridad alta'
+                                      : item.priority === 'LOW'
+                                        ? 'Prioridad baja'
+                                        : 'Prioridad media'}
+                                  </span>
+                                </div>
+
+                                <strong>{item.title}</strong>
+
+                                {item.description && (
+                                  <p>{item.description}</p>
+                                )}
+
+                                <small>
+                                  {item.status === 'OPEN'
+                                    ? 'Pendiente'
+                                    : 'Resuelto'}
+                                </small>
+
+                                {item.status === 'OPEN' && (
+                                  <button
+                                    className="shift-secondary-action"
+                                    type="button"
+                                    disabled={
+                                      resolvingHandoverItemId ===
+                                      item.id
+                                    }
+                                    onClick={() =>
+                                      handleResolveIncomingItem(
+                                        handover,
+                                        item,
+                                      )
+                                    }
+                                  >
+                                    {resolvingHandoverItemId ===
+                                    item.id
+                                      ? 'Resolviendo...'
+                                      : 'Marcar como resuelto'}
+                                  </button>
+                                )}
+                              </article>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {handover.status === 'SUBMITTED' && (
