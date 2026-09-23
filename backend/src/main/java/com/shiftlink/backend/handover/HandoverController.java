@@ -47,6 +47,7 @@ public class HandoverController {
             companyId,
             locationId,
             shiftId,
+            request.targetShiftId(),
             request.notes()
         );
 

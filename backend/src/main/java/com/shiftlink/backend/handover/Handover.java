@@ -33,6 +33,11 @@ public class Handover {
     @JoinColumn(name = "shift_id", nullable = false, unique = true)
     private Shift shift;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_shift_id")
+    private Shift targetShift;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private UserAccount createdBy;
@@ -91,6 +96,15 @@ public class Handover {
 
     public Shift getShift() {
         return shift;
+    }
+
+
+    public Shift getTargetShift() {
+        return targetShift;
+    }
+
+    public void setTargetShift(Shift targetShift) {
+        this.targetShift = targetShift;
     }
 
     public UserAccount getCreatedBy() {

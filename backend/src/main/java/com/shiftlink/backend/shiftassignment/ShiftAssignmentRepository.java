@@ -33,4 +33,11 @@ public interface ShiftAssignmentRepository
         UUID shiftId,
         UUID membershipId
     );
+
+
+    boolean existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+        UUID shiftId,
+        UUID userId
+    );
+
 }

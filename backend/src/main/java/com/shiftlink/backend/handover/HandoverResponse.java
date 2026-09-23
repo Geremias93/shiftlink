@@ -4,8 +4,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record HandoverResponse(
+
     UUID id,
     UUID shiftId,
+    UUID targetShiftId,
     UUID createdByUserId,
     String notes,
     HandoverStatus status,
@@ -14,9 +16,15 @@ public record HandoverResponse(
     UUID acknowledgedByUserId,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt
+
 ) {
 
     public static HandoverResponse from(Handover handover) {
+
+        UUID targetShiftId =
+            handover.getTargetShift() == null
+                ? null
+                : handover.getTargetShift().getId();
 
         UUID acknowledgedByUserId =
             handover.getAcknowledgedBy() == null
@@ -26,6 +34,7 @@ public record HandoverResponse(
         return new HandoverResponse(
             handover.getId(),
             handover.getShift().getId(),
+            targetShiftId,
             handover.getCreatedBy().getId(),
             handover.getNotes(),
             handover.getStatus(),

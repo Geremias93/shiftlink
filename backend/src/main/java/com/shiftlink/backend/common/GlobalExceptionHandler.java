@@ -17,6 +17,8 @@ import com.shiftlink.backend.shift.ShiftNotFoundException;
 import com.shiftlink.backend.handover.DuplicateHandoverException;
 import com.shiftlink.backend.handover.HandoverNotFoundException;
 import com.shiftlink.backend.handover.InvalidHandoverStateException;
+import com.shiftlink.backend.handover.HandoverShiftAssignmentRequiredException;
+import com.shiftlink.backend.handover.HandoverSelfAcknowledgementException;
 import com.shiftlink.backend.handoveritem.HandoverItemNotFoundException;
 import com.shiftlink.backend.handoveritem.InvalidHandoverItemStateException;
 import com.shiftlink.backend.shiftassignment.ShiftAssignmentMembershipNotFoundException;
@@ -466,6 +468,50 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(HandoverShiftAssignmentRequiredException.class)
+    public ResponseEntity<ApiError> handleHandoverShiftAssignmentRequired(
+            HandoverShiftAssignmentRequiredException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(HandoverSelfAcknowledgementException.class)
+    public ResponseEntity<ApiError> handleHandoverSelfAcknowledgement(
+            HandoverSelfAcknowledgementException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),

@@ -10,6 +10,8 @@ import com.shiftlink.backend.membership.AuthenticatedUserNotFoundException;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
 import com.shiftlink.backend.shift.Shift;
 import com.shiftlink.backend.shift.ShiftService;
+
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentRepository;
 import com.shiftlink.backend.user.UserAccount;
 import com.shiftlink.backend.user.UserRepository;
 
@@ -20,14 +22,20 @@ public class HandoverService {
     private final ShiftService shiftService;
     private final UserRepository userRepository;
 
+    private final ShiftAssignmentRepository shiftAssignmentRepository;
+
     public HandoverService(
             HandoverRepository handoverRepository,
             ShiftService shiftService,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+
+            ShiftAssignmentRepository shiftAssignmentRepository) {
 
         this.handoverRepository = handoverRepository;
         this.shiftService = shiftService;
         this.userRepository = userRepository;
+
+        this.shiftAssignmentRepository = shiftAssignmentRepository;
     }
 
     @Transactional
@@ -36,6 +44,7 @@ public class HandoverService {
             UUID companyId,
             UUID locationId,
             UUID shiftId,
+            UUID targetShiftId,
             String notes) {
 
         Shift shift = shiftService.findById(
@@ -45,9 +54,37 @@ public class HandoverService {
             shiftId
         );
 
+
+        boolean assignedToSourceShift =
+            shiftAssignmentRepository
+                .existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+                    shiftId,
+                    userId
+                );
+
+        if (!assignedToSourceShift) {
+            throw new HandoverShiftAssignmentRequiredException(
+                "Debes estar asignado al turno para crear su relevo"
+            );
+        }
+
         if (handoverRepository.existsByShift_Id(shiftId)) {
             throw new DuplicateHandoverException();
         }
+
+        if (shiftId.equals(targetShiftId)) {
+            throw new InvalidHandoverStateException(
+                "El turno de origen y el turno receptor deben ser distintos"
+            );
+        }
+
+        Shift targetShift = shiftService.findById(
+            userId,
+            companyId,
+            locationId,
+            targetShiftId
+        );
+
 
         UserAccount creator = userRepository
             .findById(userId)
@@ -65,6 +102,8 @@ public class HandoverService {
             creator,
             normalizedNotes
         );
+
+        handover.setTargetShift(targetShift);
 
         return handoverRepository.save(handover);
     }
@@ -105,6 +144,24 @@ public class HandoverService {
             shiftId
         );
 
+
+        if (!handover.getCreatedBy().getId().equals(userId)) {
+            throw new CompanyAccessDeniedException();
+        }
+
+        boolean assignedToSourceShift =
+            shiftAssignmentRepository
+                .existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+                    shiftId,
+                    userId
+                );
+
+        if (!assignedToSourceShift) {
+            throw new HandoverShiftAssignmentRequiredException(
+                "Debes estar asignado al turno para enviar su relevo"
+            );
+        }
+
         if (handover.getStatus() != HandoverStatus.DRAFT) {
             throw new InvalidHandoverStateException(
                 "Only draft handovers can be submitted"
@@ -133,10 +190,37 @@ public class HandoverService {
             shiftId
         );
 
+
+        Shift targetShift = handover.getTargetShift();
+
+        if (targetShift == null) {
+            throw new InvalidHandoverStateException(
+                "El relevo no tiene un turno receptor asignado"
+            );
+        }
+
+        boolean assignedToTargetShift =
+            shiftAssignmentRepository
+                .existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+                    targetShift.getId(),
+                    userId
+                );
+
+        if (!assignedToTargetShift) {
+            throw new HandoverShiftAssignmentRequiredException(
+                "Debes estar asignado al turno receptor para confirmar el relevo"
+            );
+        }
+
         if (handover.getStatus() != HandoverStatus.SUBMITTED) {
             throw new InvalidHandoverStateException(
                 "Only submitted handovers can be acknowledged"
             );
+        }
+
+
+        if (handover.getCreatedBy().getId().equals(userId)) {
+            throw new HandoverSelfAcknowledgementException();
         }
 
         UserAccount acknowledgedBy = userRepository
@@ -185,6 +269,20 @@ public class HandoverService {
 
         if (!handover.getCreatedBy().getId().equals(userId)) {
             throw new CompanyAccessDeniedException();
+        }
+
+
+        boolean assignedToSourceShift =
+            shiftAssignmentRepository
+                .existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
+                    shiftId,
+                    userId
+                );
+
+        if (!assignedToSourceShift) {
+            throw new HandoverShiftAssignmentRequiredException(
+                "Debes estar asignado al turno para editar su relevo"
+            );
         }
 
         String normalizedNotes =
