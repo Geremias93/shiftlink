@@ -1,5 +1,6 @@
 package com.shiftlink.backend.handover;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -85,6 +86,77 @@ public class HandoverService {
         return handoverRepository
             .findByShift_Id(shiftId)
             .orElseThrow(HandoverNotFoundException::new);
+    }
+
+
+
+    @Transactional
+    public Handover submit(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId) {
+
+        Handover handover = findByShift(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        if (handover.getStatus() != HandoverStatus.DRAFT) {
+            throw new InvalidHandoverStateException(
+                "Only draft handovers can be submitted"
+            );
+        }
+
+        handover.setStatus(HandoverStatus.SUBMITTED);
+        handover.setSubmittedAt(OffsetDateTime.now());
+
+        return handoverRepository.save(handover);
+    }
+
+
+
+    @Transactional
+    public Handover acknowledge(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId) {
+
+        Handover handover = findByShift(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        if (handover.getStatus() != HandoverStatus.SUBMITTED) {
+            throw new InvalidHandoverStateException(
+                "Only submitted handovers can be acknowledged"
+            );
+        }
+
+        UserAccount acknowledgedBy = userRepository
+            .findById(userId)
+            .orElseThrow(
+                AuthenticatedUserNotFoundException::new
+            );
+
+        handover.setStatus(
+            HandoverStatus.ACKNOWLEDGED
+        );
+
+        handover.setAcknowledgedAt(
+            OffsetDateTime.now()
+        );
+
+        handover.setAcknowledgedBy(
+            acknowledgedBy
+        );
+
+        return handoverRepository.save(handover);
     }
 
 }

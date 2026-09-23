@@ -11,6 +11,7 @@ import com.shiftlink.backend.shift.InvalidShiftTimeException;
 import com.shiftlink.backend.shift.ShiftNotFoundException;
 import com.shiftlink.backend.handover.DuplicateHandoverException;
 import com.shiftlink.backend.handover.HandoverNotFoundException;
+import com.shiftlink.backend.handover.InvalidHandoverStateException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -195,6 +196,27 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(InvalidHandoverStateException.class)
+    public ResponseEntity<ApiError> handleInvalidHandoverState(
+            InvalidHandoverStateException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),

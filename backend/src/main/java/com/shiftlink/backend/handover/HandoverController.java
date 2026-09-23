@@ -89,4 +89,50 @@ public class HandoverController {
         return HandoverResponse.from(handover);
     }
 
+
+
+    @PostMapping("/submit")
+    public HandoverResponse submit(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Handover handover = handoverService.submit(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return HandoverResponse.from(handover);
+    }
+
+
+
+    @PostMapping("/acknowledge")
+    public HandoverResponse acknowledge(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Handover handover = handoverService.acknowledge(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return HandoverResponse.from(handover);
+    }
+
 }
