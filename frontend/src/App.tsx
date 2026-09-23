@@ -1489,7 +1489,7 @@ function App() {
         return 'Pendiente de confirmar'
       }
 
-      return 'Confirmado'
+      return 'Recepción confirmada'
     }
 
 
