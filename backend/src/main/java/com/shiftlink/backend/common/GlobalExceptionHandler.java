@@ -6,6 +6,7 @@ import com.shiftlink.backend.company.DuplicateCompanySlugException;
 import com.shiftlink.backend.auth.DuplicateEmailException;
 import com.shiftlink.backend.auth.InvalidCredentialsException;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
+import com.shiftlink.backend.location.LocationNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -85,6 +86,27 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.FORBIDDEN;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<ApiError> handleLocationNotFound(
+            LocationNotFoundException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),

@@ -75,4 +75,24 @@ public class LocationController {
             .map(LocationResponse::from)
             .toList();
     }
+
+    @GetMapping("/{locationId}")
+    public LocationResponse findById(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Location location = locationService.findById(
+            userId,
+            companyId,
+            locationId
+        );
+
+        return LocationResponse.from(location);
+    }
+
 }

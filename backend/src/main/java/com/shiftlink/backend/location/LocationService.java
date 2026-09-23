@@ -82,4 +82,24 @@ public class LocationService {
                 companyId
             );
     }
+
+    @Transactional(readOnly = true)
+    public Location findById(
+            UUID userId,
+            UUID companyId,
+            UUID locationId) {
+
+        companyAccessService.requireMembership(
+            userId,
+            companyId
+        );
+
+        return locationRepository
+            .findByIdAndCompany_IdAndActiveTrue(
+                locationId,
+                companyId
+            )
+            .orElseThrow(LocationNotFoundException::new);
+    }
+
 }
