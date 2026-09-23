@@ -141,9 +141,26 @@ public class HandoverItemService {
                 AuthenticatedUserNotFoundException::new
             );
 
+        OffsetDateTime resolvedAt = OffsetDateTime.now();
+
         item.setStatus(HandoverItemStatus.RESOLVED);
-        item.setResolvedAt(OffsetDateTime.now());
+        item.setResolvedAt(resolvedAt);
         item.setResolvedBy(resolvedBy);
+
+        HandoverItem ancestor = item.getCarriedFrom();
+
+        while (ancestor != null) {
+
+            if (ancestor.getStatus() == HandoverItemStatus.OPEN) {
+                ancestor.setStatus(HandoverItemStatus.RESOLVED);
+                ancestor.setResolvedAt(resolvedAt);
+                ancestor.setResolvedBy(resolvedBy);
+
+                handoverItemRepository.save(ancestor);
+            }
+
+            ancestor = ancestor.getCarriedFrom();
+        }
 
         return handoverItemRepository.save(item);
     }
