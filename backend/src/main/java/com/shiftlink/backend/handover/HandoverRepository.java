@@ -1,5 +1,7 @@
 package com.shiftlink.backend.handover;
 
+import java.util.List;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +17,11 @@ public interface HandoverRepository
     boolean existsByShift_Id(
         UUID shiftId
     );
+
+
+    List<Handover> findByTargetShift_IdAndStatusNotOrderByCreatedAtDesc(
+        UUID targetShiftId,
+        HandoverStatus excludedStatus
+    );
+
 }

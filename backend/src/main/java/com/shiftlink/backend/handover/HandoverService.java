@@ -1,6 +1,8 @@
 package com.shiftlink.backend.handover;
 
 import java.time.OffsetDateTime;
+
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -293,6 +295,29 @@ public class HandoverService {
         handover.setNotes(normalizedNotes);
 
         return handoverRepository.save(handover);
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<Handover> findIncomingByShift(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId) {
+
+        shiftService.findById(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return handoverRepository
+            .findByTargetShift_IdAndStatusNotOrderByCreatedAtDesc(
+                shiftId,
+                HandoverStatus.DRAFT
+            );
     }
 
 }
