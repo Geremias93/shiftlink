@@ -11,6 +11,7 @@ import com.shiftlink.backend.handover.Handover;
 import com.shiftlink.backend.handover.HandoverService;
 import com.shiftlink.backend.handover.HandoverStatus;
 import com.shiftlink.backend.handover.InvalidHandoverStateException;
+import com.shiftlink.backend.location.LocationService;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
 import com.shiftlink.backend.membership.AuthenticatedUserNotFoundException;
 import com.shiftlink.backend.user.UserAccount;
@@ -22,15 +23,18 @@ public class HandoverItemService {
     private final HandoverItemRepository handoverItemRepository;
     private final HandoverService handoverService;
     private final UserRepository userRepository;
+    private final LocationService locationService;
 
     public HandoverItemService(
             HandoverItemRepository handoverItemRepository,
             HandoverService handoverService,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            LocationService locationService) {
 
         this.handoverItemRepository = handoverItemRepository;
         this.handoverService = handoverService;
         this.userRepository = userRepository;
+        this.locationService = locationService;
     }
 
     @Transactional
@@ -263,6 +267,24 @@ public class HandoverItemService {
                 return handoverItemRepository.save(carried);
             })
             .toList();
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<HandoverItem> findOpenByLocation(
+            UUID userId,
+            UUID companyId,
+            UUID locationId) {
+
+        locationService.findById(
+            userId,
+            companyId,
+            locationId
+        );
+
+        return handoverItemRepository
+            .findOpenLatestByLocationId(locationId);
     }
 
 }

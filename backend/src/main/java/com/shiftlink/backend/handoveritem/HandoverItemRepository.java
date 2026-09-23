@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface HandoverItemRepository
         extends JpaRepository<HandoverItem, UUID> {
@@ -27,6 +29,25 @@ public interface HandoverItemRepository
     boolean existsByHandover_IdAndCarriedFrom_Id(
         UUID handoverId,
         UUID carriedFromItemId
+    );
+
+
+
+    @Query("""
+        select item
+        from HandoverItem item
+        where item.handover.shift.location.id = :locationId
+          and item.status = com.shiftlink.backend.handoveritem.HandoverItemStatus.OPEN
+          and item.handover.status <> com.shiftlink.backend.handover.HandoverStatus.DRAFT
+          and not exists (
+              select child.id
+              from HandoverItem child
+              where child.carriedFrom = item
+          )
+        order by item.createdAt desc
+        """)
+    List<HandoverItem> findOpenLatestByLocationId(
+        @Param("locationId") UUID locationId
     );
 
 }
