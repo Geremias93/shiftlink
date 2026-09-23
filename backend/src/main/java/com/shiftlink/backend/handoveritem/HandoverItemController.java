@@ -119,4 +119,29 @@ public class HandoverItemController {
         return HandoverItemResponse.from(item);
     }
 
+
+
+    @GetMapping("/open")
+    public List<HandoverItemResponse> findOpen(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        return handoverItemService
+            .findOpen(
+                userId,
+                companyId,
+                locationId,
+                shiftId
+            )
+            .stream()
+            .map(HandoverItemResponse::from)
+            .toList();
+    }
+
 }

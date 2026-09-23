@@ -148,4 +148,27 @@ public class HandoverItemService {
         return handoverItemRepository.save(item);
     }
 
+
+
+    @Transactional(readOnly = true)
+    public List<HandoverItem> findOpen(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId) {
+
+        Handover handover = handoverService.findByShift(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return handoverItemRepository
+            .findByHandover_IdAndStatusOrderByCreatedAtAsc(
+                handover.getId(),
+                HandoverItemStatus.OPEN
+            );
+    }
+
 }
