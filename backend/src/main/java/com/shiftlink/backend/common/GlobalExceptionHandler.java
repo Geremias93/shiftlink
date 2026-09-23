@@ -6,6 +6,9 @@ import com.shiftlink.backend.company.DuplicateCompanySlugException;
 import com.shiftlink.backend.auth.DuplicateEmailException;
 import com.shiftlink.backend.auth.InvalidCredentialsException;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
+import com.shiftlink.backend.membership.MembershipUserNotFoundException;
+import com.shiftlink.backend.membership.MembershipAlreadyActiveException;
+import com.shiftlink.backend.membership.InvalidMembershipRoleException;
 import com.shiftlink.backend.location.LocationNotFoundException;
 import com.shiftlink.backend.shift.InvalidShiftTimeException;
 import com.shiftlink.backend.shift.ShiftNotFoundException;
@@ -263,6 +266,70 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(MembershipUserNotFoundException.class)
+    public ResponseEntity<ApiError> handleMembershipUserNotFound(
+            MembershipUserNotFoundException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(MembershipAlreadyActiveException.class)
+    public ResponseEntity<ApiError> handleMembershipAlreadyActive(
+            MembershipAlreadyActiveException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(InvalidMembershipRoleException.class)
+    public ResponseEntity<ApiError> handleInvalidMembershipRole(
+            InvalidMembershipRoleException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),
