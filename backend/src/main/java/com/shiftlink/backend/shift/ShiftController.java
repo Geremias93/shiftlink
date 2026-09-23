@@ -108,4 +108,73 @@ public class ShiftController {
     }
 
 
+
+
+    @PostMapping("/{shiftId}/start")
+    public ShiftResponse start(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Shift shift = shiftService.start(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return ShiftResponse.from(shift);
+    }
+
+
+
+    @PostMapping("/{shiftId}/complete")
+    public ShiftResponse complete(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Shift shift = shiftService.complete(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return ShiftResponse.from(shift);
+    }
+
+
+
+    @PostMapping("/{shiftId}/cancel")
+    public ShiftResponse cancel(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Shift shift = shiftService.cancel(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return ShiftResponse.from(shift);
+    }
+
 }

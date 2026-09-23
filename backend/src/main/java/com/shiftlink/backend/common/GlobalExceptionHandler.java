@@ -1,5 +1,7 @@
 package com.shiftlink.backend.common;
 
+import com.shiftlink.backend.shift.InvalidShiftStateException;
+
 import java.time.OffsetDateTime;
 
 import com.shiftlink.backend.company.DuplicateCompanySlugException;
@@ -512,6 +514,28 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.FORBIDDEN;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(InvalidShiftStateException.class)
+    public ResponseEntity<ApiError> handleInvalidShiftState(
+            InvalidShiftStateException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),
