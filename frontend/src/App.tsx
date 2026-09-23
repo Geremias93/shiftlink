@@ -127,6 +127,10 @@ function App() {
   const [sendingHandover, setSendingHandover] =
     useState(false)
 
+  const [updatingHandover, setUpdatingHandover] =
+    useState(false)
+
+
   const [
     acknowledgingHandoverId,
     setAcknowledgingHandoverId,
@@ -529,6 +533,62 @@ function App() {
       )
     } finally {
       setAcknowledgingHandoverId(null)
+    }
+  }
+
+  async function handleUpdateHandover(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !outgoingHandover ||
+      outgoingHandover.status !== 'DRAFT'
+    ) {
+      return
+    }
+
+    setUpdatingHandover(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            notes: handoverNotes.trim() || null,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido actualizar el borrador',
+        )
+      }
+
+      const data: Handover = await response.json()
+
+      setOutgoingHandover(data)
+      setShowHandoverForm(false)
+      setHandoverNotes('')
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setUpdatingHandover(false)
     }
   }
 
@@ -951,18 +1011,105 @@ function App() {
                     </div>
 
                     {outgoingHandover.status === 'DRAFT' && (
-                      <div className="handover-card-actions">
-                        <button
-                          className="shift-primary-action"
-                          type="button"
-                          disabled={sendingHandover}
-                          onClick={handleSubmitHandover}
-                        >
-                          {sendingHandover
-                            ? 'Enviando...'
-                            : 'Enviar relevo'}
-                        </button>
-                      </div>
+                      <>
+                        {!showHandoverForm && (
+                          <div className="handover-card-actions">
+                            <button
+                              className="shift-secondary-action"
+                              type="button"
+                              onClick={() => {
+                                setHandoverNotes(
+                                  outgoingHandover.notes ?? '',
+                                )
+                                setShowHandoverForm(true)
+                              }}
+                            >
+                              Editar borrador
+                            </button>
+
+                            <button
+                              className="shift-primary-action"
+                              type="button"
+                              disabled={sendingHandover}
+                              onClick={handleSubmitHandover}
+                            >
+                              {sendingHandover
+                                ? 'Enviando...'
+                                : 'Enviar relevo'}
+                            </button>
+                          </div>
+                        )}
+
+                        {showHandoverForm && (
+                          <form
+                            className="handover-form"
+                            onSubmit={handleUpdateHandover}
+                          >
+                            <div className="handover-form-heading">
+                              <strong>Editar borrador</strong>
+                              <span>
+                                Modifica la información antes
+                                de enviar el relevo.
+                              </span>
+                            </div>
+
+                            <label className="handover-field">
+                              <span>Destino</span>
+
+                              <input
+                                type="text"
+                                readOnly
+                                value={
+                                  shifts.find(
+                                    (shift) =>
+                                      shift.id ===
+                                      outgoingHandover.targetShiftId,
+                                  )?.name ?? 'Turno receptor'
+                                }
+                              />
+                            </label>
+
+                            <label className="handover-field">
+                              <span>
+                                Notas para el siguiente turno
+                              </span>
+
+                              <textarea
+                                rows={5}
+                                value={handoverNotes}
+                                onChange={(event) =>
+                                  setHandoverNotes(
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </label>
+
+                            <div className="handover-form-actions">
+                              <button
+                                className="shift-secondary-action"
+                                type="button"
+                                onClick={() => {
+                                  setShowHandoverForm(false)
+                                  setHandoverNotes('')
+                                }}
+                              >
+                                Cancelar
+                              </button>
+
+                              <button
+                                className="shift-primary-action"
+                                type="submit"
+                                disabled={updatingHandover}
+                              >
+                                {updatingHandover
+                                  ? 'Guardando...'
+                                  : 'Guardar cambios'}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </>
                     )}
                   </article>
                 )}
