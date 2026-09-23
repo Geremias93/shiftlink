@@ -1034,7 +1034,7 @@ function App() {
   ) {
     const shiftStatusLabels = {
       SCHEDULED: 'Programado',
-      ACTIVE: 'Activo',
+      ACTIVE: 'En curso',
       COMPLETED: 'Completado',
       CANCELLED: 'Cancelado',
     }
@@ -1921,13 +1921,22 @@ function App() {
     selectedCompany &&
     selectedLocation
   ) {
-    const activeShifts = shifts.filter(
-      (shift) => shift.status === 'ACTIVE',
-    ).length
 
-    const scheduledShifts = shifts.filter(
-      (shift) => shift.status === 'SCHEDULED',
-    ).length
+    const activeShift =
+      shifts.find(
+        (shift) => shift.status === 'ACTIVE',
+      ) ?? null
+
+    const nextShift =
+      shifts
+        .filter(
+          (shift) => shift.status === 'SCHEDULED',
+        )
+        .sort(
+          (a, b) =>
+            new Date(a.startsAt).getTime() -
+            new Date(b.startsAt).getTime(),
+        )[0] ?? null
 
     function formatShiftDate(value: string) {
       return new Intl.DateTimeFormat('es-ES', {
@@ -2022,85 +2031,69 @@ function App() {
 
           {!loadingLocationData && (
             <>
-              <section className="stats-grid">
-                <article className="stat-card">
-                  <span>Turnos totales</span>
-                  <strong>{shifts.length}</strong>
-                </article>
 
-                <article className="stat-card">
-                  <span>Programados</span>
-                  <strong>{scheduledShifts}</strong>
-                </article>
-
-                <article className="stat-card">
-                  <span>Activos ahora</span>
-                  <strong>{activeShifts}</strong>
-                </article>
-
-                <article className="stat-card stat-card-alert">
-                  <span>Pendientes abiertos</span>
-                  <strong>{openItems.length}</strong>
-                </article>
-              </section>
-
-              <section className="location-section">
+              <section className="current-shift-section">
                 <div className="section-heading">
                   <div>
-                    <h2>Turnos</h2>
+                    <p className="current-shift-eyebrow">
+                      AHORA
+                    </p>
+
+                    <h2>Turno en curso</h2>
+
                     <p>
-                      Consulta el estado y horario de cada turno.
+                      Lo que está ocurriendo ahora mismo
+                      en este local.
                     </p>
                   </div>
-
-                  <span className="section-count">
-                    {shifts.length}
-                  </span>
                 </div>
 
-                <div className="shifts-grid">
-                  {shifts.map((shift) => (
-                    <button
-                      className="shift-card"
-                      type="button"
-                      key={shift.id}
-                      onClick={() => setSelectedShift(shift)}
-                    >
-                      <div className="shift-card-top">
-                        <span
-                          className={
-                            `shift-status ` +
-                            `shift-status-${shift.status.toLowerCase()}`
-                          }
-                        >
-                          {shiftStatusLabel(shift.status)}
-                        </span>
+                {activeShift ? (
+                  <button
+                    className="current-shift-card"
+                    type="button"
+                    onClick={() =>
+                      setSelectedShift(activeShift)
+                    }
+                  >
+                    <div className="current-shift-card-top">
+                      <span className="shift-status shift-status-active">
+                        En curso
+                      </span>
 
-                        <span className="company-arrow">
-                          →
-                        </span>
+                      <span className="current-shift-arrow">
+                        →
+                      </span>
+                    </div>
+
+                    <div className="current-shift-main">
+                      <div>
+                        <h3>{activeShift.name}</h3>
+
+                        <p className="current-shift-time">
+                          {formatShiftDate(
+                            activeShift.startsAt,
+                          )}
+                          {' → '}
+                          {formatShiftDate(
+                            activeShift.endsAt,
+                          )}
+                        </p>
                       </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="all-clear">
+                    <div className="all-clear-icon">✓</div>
 
-                      <h3>{shift.name}</h3>
-
-                      <div className="shift-times">
-                        <div>
-                          <span>Inicio</span>
-                          <strong>
-                            {formatShiftDate(shift.startsAt)}
-                          </strong>
-                        </div>
-
-                        <div>
-                          <span>Fin</span>
-                          <strong>
-                            {formatShiftDate(shift.endsAt)}
-                          </strong>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                    <div>
+                      <strong>No hay ningún turno en curso</strong>
+                      <p>
+                        El siguiente turno aparecerá más abajo.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </section>
 
               <section className="location-section pending-section">
@@ -2176,6 +2169,123 @@ function App() {
                   </div>
                 )}
               </section>
+
+
+              <section className="location-section next-shift-section">
+                <div className="section-heading">
+                  <div>
+                    <h2>Próximo turno</h2>
+
+                    <p>
+                      El siguiente turno previsto para este local.
+                    </p>
+                  </div>
+                </div>
+
+                {nextShift ? (
+                  <button
+                    className="next-shift-card"
+                    type="button"
+                    onClick={() =>
+                      setSelectedShift(nextShift)
+                    }
+                  >
+                    <div>
+                      <span className="shift-status shift-status-scheduled">
+                        Próximo
+                      </span>
+
+                      <h3>{nextShift.name}</h3>
+
+                      <p>
+                        {formatShiftDate(nextShift.startsAt)}
+                        {' → '}
+                        {formatShiftDate(nextShift.endsAt)}
+                      </p>
+                    </div>
+
+                    <span className="company-arrow">
+                      →
+                    </span>
+                  </button>
+                ) : (
+                  <div className="all-clear">
+                    <div className="all-clear-icon">✓</div>
+
+                    <div>
+                      <strong>No hay más turnos programados</strong>
+                      <p>
+                        No hay un siguiente turno pendiente
+                        de comenzar.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              <section className="location-section">
+                <div className="section-heading">
+                  <div>
+                    <h2>Todos los turnos</h2>
+                    <p>
+                      Consulta el historial y los próximos turnos.
+                    </p>
+                  </div>
+
+                  <span className="section-count">
+                    {shifts.length}
+                  </span>
+                </div>
+
+                <div className="shifts-grid">
+                  {shifts.map((shift) => (
+                    <button
+                      className={
+                        shift.status === 'ACTIVE'
+                          ? 'shift-card shift-card-current'
+                          : 'shift-card'
+                      }
+                      type="button"
+                      key={shift.id}
+                      onClick={() => setSelectedShift(shift)}
+                    >
+                      <div className="shift-card-top">
+                        <span
+                          className={
+                            `shift-status ` +
+                            `shift-status-${shift.status.toLowerCase()}`
+                          }
+                        >
+                          {shiftStatusLabel(shift.status)}
+                        </span>
+
+                        <span className="company-arrow">
+                          →
+                        </span>
+                      </div>
+
+                      <h3>{shift.name}</h3>
+
+                      <div className="shift-times">
+                        <div>
+                          <span>Inicio</span>
+                          <strong>
+                            {formatShiftDate(shift.startsAt)}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Fin</span>
+                          <strong>
+                            {formatShiftDate(shift.endsAt)}
+                          </strong>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
             </>
           )}
         </main>
