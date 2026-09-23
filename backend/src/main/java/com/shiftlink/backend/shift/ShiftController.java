@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -108,6 +109,33 @@ public class ShiftController {
     }
 
 
+
+
+
+    @PatchMapping("/{shiftId}")
+    public ShiftResponse update(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId,
+            @Valid @RequestBody UpdateShiftRequest request) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Shift shift = shiftService.update(
+            userId,
+            companyId,
+            locationId,
+            shiftId,
+            request.name(),
+            request.startsAt(),
+            request.endsAt()
+        );
+
+        return ShiftResponse.from(shift);
+    }
 
 
     @PostMapping("/{shiftId}/start")

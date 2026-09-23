@@ -121,6 +121,48 @@ public class ShiftService {
 
 
 
+
+    @Transactional
+    public Shift update(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId,
+            String name,
+            OffsetDateTime startsAt,
+            OffsetDateTime endsAt) {
+
+        companyAccessService.requireAnyRole(
+            userId,
+            companyId,
+            MembershipRole.OWNER,
+            MembershipRole.MANAGER
+        );
+
+        Shift shift = findById(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        if (shift.getStatus() != ShiftStatus.SCHEDULED) {
+            throw new InvalidShiftStateException(
+                "Solo se puede editar un turno programado"
+            );
+        }
+
+        if (!endsAt.isAfter(startsAt)) {
+            throw new InvalidShiftTimeException();
+        }
+
+        shift.setName(name.trim());
+        shift.setStartsAt(startsAt);
+        shift.setEndsAt(endsAt);
+
+        return shiftRepository.save(shift);
+    }
+
     @Transactional
     public Shift start(
             UUID userId,

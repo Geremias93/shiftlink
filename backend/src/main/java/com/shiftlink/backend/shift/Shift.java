@@ -97,6 +97,18 @@ public class Shift {
         return endsAt;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setStartsAt(OffsetDateTime startsAt) {
+        this.startsAt = startsAt;
+    }
+
+    public void setEndsAt(OffsetDateTime endsAt) {
+        this.endsAt = endsAt;
+    }
+
     public ShiftStatus getStatus() {
         return status;
     }

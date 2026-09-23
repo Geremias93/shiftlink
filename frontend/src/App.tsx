@@ -90,6 +90,22 @@ type Handover = {
   updatedAt: string
 }
 
+
+function toDatetimeLocalValue(value: string) {
+  const date = new Date(value)
+
+  const pad = (number: number) =>
+    String(number).padStart(2, '0')
+
+  return (
+    `${date.getFullYear()}-` +
+    `${pad(date.getMonth() + 1)}-` +
+    `${pad(date.getDate())}T` +
+    `${pad(date.getHours())}:` +
+    `${pad(date.getMinutes())}`
+  )
+}
+
 function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -115,6 +131,27 @@ function App() {
 
   const [selectedShift, setSelectedShift] =
     useState<Shift | null>(null)
+
+  const [showCreateShiftForm, setShowCreateShiftForm] =
+    useState(false)
+
+  const [newShiftName, setNewShiftName] = useState('')
+  const [newShiftStartsAt, setNewShiftStartsAt] = useState('')
+  const [newShiftEndsAt, setNewShiftEndsAt] = useState('')
+
+  const [savingShift, setSavingShift] = useState(false)
+
+  const [showEditShiftForm, setShowEditShiftForm] =
+    useState(false)
+
+  const [editShiftName, setEditShiftName] = useState('')
+  const [editShiftStartsAt, setEditShiftStartsAt] =
+    useState('')
+  const [editShiftEndsAt, setEditShiftEndsAt] =
+    useState('')
+
+  const [savingShiftEdit, setSavingShiftEdit] =
+    useState(false)
 
   const [assignments, setAssignments] =
     useState<ShiftAssignment[]>([])
@@ -565,6 +602,85 @@ function App() {
     selectedShift,
   ])
 
+
+  async function handleCreateShift(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !newShiftName.trim() ||
+      !newShiftStartsAt ||
+      !newShiftEndsAt
+    ) {
+      return
+    }
+
+    const startsAt = new Date(newShiftStartsAt)
+    const endsAt = new Date(newShiftEndsAt)
+
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      setError(
+        'La hora de fin debe ser posterior a la hora de inicio',
+      )
+      return
+    }
+
+    setSavingShift(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: newShiftName.trim(),
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido crear el turno',
+        )
+      }
+
+      const data: Shift = await response.json()
+
+      setShifts((current) =>
+        [...current, data].sort(
+          (a, b) =>
+            new Date(a.startsAt).getTime() -
+            new Date(b.startsAt).getTime(),
+        ),
+      )
+
+      setNewShiftName('')
+      setNewShiftStartsAt('')
+      setNewShiftEndsAt('')
+      setShowCreateShiftForm(false)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSavingShift(false)
+    }
+  }
+
+
   async function handleAssignMember(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -947,6 +1063,105 @@ function App() {
     }
   }
 
+
+  function handleOpenEditShift() {
+    if (!selectedShift) {
+      return
+    }
+
+    setEditShiftName(selectedShift.name)
+    setEditShiftStartsAt(
+      toDatetimeLocalValue(selectedShift.startsAt),
+    )
+    setEditShiftEndsAt(
+      toDatetimeLocalValue(selectedShift.endsAt),
+    )
+    setError('')
+    setShowEditShiftForm(true)
+  }
+
+  async function handleUpdateShift(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !editShiftName.trim() ||
+      !editShiftStartsAt ||
+      !editShiftEndsAt
+    ) {
+      return
+    }
+
+    const startsAt = new Date(editShiftStartsAt)
+    const endsAt = new Date(editShiftEndsAt)
+
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      setError(
+        'La hora de fin debe ser posterior a la hora de inicio',
+      )
+      return
+    }
+
+    setSavingShiftEdit(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: editShiftName.trim(),
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido actualizar el turno',
+        )
+      }
+
+      const data: Shift = await response.json()
+
+      setSelectedShift(data)
+
+      setShifts((current) =>
+        current
+          .map((shift) =>
+            shift.id === data.id ? data : shift,
+          )
+          .sort(
+            (a, b) =>
+              new Date(a.startsAt).getTime() -
+              new Date(b.startsAt).getTime(),
+          ),
+      )
+
+      setShowEditShiftForm(false)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSavingShiftEdit(false)
+    }
+  }
+
+
   async function handleStartShift() {
     if (
       !token ||
@@ -1284,6 +1499,7 @@ function App() {
           type="button"
           onClick={() => {
             setSelectedShift(null)
+            setShowEditShiftForm(false)
             setAssignments([])
             setOutgoingHandover(null)
             setIncomingHandovers([])
@@ -1300,6 +1516,7 @@ function App() {
               <h1>{selectedShift.name}</h1>
             </div>
 
+
             <div className="shift-detail-actions">
               <span
                 className={`shift-status-badge shift-status-${selectedShift.status.toLowerCase()}`}
@@ -1307,42 +1524,60 @@ function App() {
                 {shiftStatusLabels[selectedShift.status]}
               </span>
 
-              {selectedShift.status === 'SCHEDULED' && (
-                <button
-                  className="shift-primary-action"
-                  type="button"
-                  disabled={changingShiftStatus}
-                  onClick={handleStartShift}
-                >
-                  {changingShiftStatus
-                    ? 'Iniciando...'
-                    : 'Iniciar turno'}
-                </button>
-              )}
+              {(
+                currentMembership?.role === 'OWNER' ||
+                currentMembership?.role === 'MANAGER'
+              ) &&
+                selectedShift.status === 'SCHEDULED' && (
+                  <div className="shift-active-actions">
+                    <button
+                      className="shift-secondary-action"
+                      type="button"
+                      onClick={handleOpenEditShift}
+                    >
+                      Editar turno
+                    </button>
 
-              {selectedShift.status === 'ACTIVE' && (
-                <div className="shift-active-actions">
-                  <button
-                    className="shift-danger-action"
-                    type="button"
-                    disabled={changingShiftStatus}
-                    onClick={handleCancelShift}
-                  >
-                    Cancelar turno
-                  </button>
+                    <button
+                      className="shift-primary-action"
+                      type="button"
+                      disabled={changingShiftStatus}
+                      onClick={handleStartShift}
+                    >
+                      {changingShiftStatus
+                        ? 'Iniciando...'
+                        : 'Iniciar turno'}
+                    </button>
+                  </div>
+                )}
 
-                  <button
-                    className="shift-primary-action"
-                    type="button"
-                    disabled={changingShiftStatus}
-                    onClick={handleCompleteShift}
-                  >
-                    {changingShiftStatus
-                      ? 'Procesando...'
-                      : 'Completar turno'}
-                  </button>
-                </div>
-              )}
+              {(
+                currentMembership?.role === 'OWNER' ||
+                currentMembership?.role === 'MANAGER'
+              ) &&
+                selectedShift.status === 'ACTIVE' && (
+                  <div className="shift-active-actions">
+                    <button
+                      className="shift-danger-action"
+                      type="button"
+                      disabled={changingShiftStatus}
+                      onClick={handleCancelShift}
+                    >
+                      Cancelar turno
+                    </button>
+
+                    <button
+                      className="shift-primary-action"
+                      type="button"
+                      disabled={changingShiftStatus}
+                      onClick={handleCompleteShift}
+                    >
+                      {changingShiftStatus
+                        ? 'Procesando...'
+                        : 'Completar turno'}
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -1367,6 +1602,97 @@ function App() {
             </div>
           </div>
         </section>
+
+
+        {showEditShiftForm &&
+          selectedShift.status === 'SCHEDULED' &&
+          (
+            currentMembership?.role === 'OWNER' ||
+            currentMembership?.role === 'MANAGER'
+          ) && (
+            <form
+              className="shift-create-form shift-edit-form"
+              onSubmit={handleUpdateShift}
+            >
+              <div className="handover-form-heading">
+                <strong>Editar turno</strong>
+                <span>
+                  Modifica el nombre o el horario antes de
+                  iniciar el turno.
+                </span>
+              </div>
+
+              <label className="handover-field">
+                <span>Nombre</span>
+
+                <input
+                  type="text"
+                  maxLength={120}
+                  value={editShiftName}
+                  onChange={(event) =>
+                    setEditShiftName(event.target.value)
+                  }
+                />
+              </label>
+
+              <div className="handover-item-form-row">
+                <label className="handover-field">
+                  <span>Inicio</span>
+
+                  <input
+                    type="datetime-local"
+                    value={editShiftStartsAt}
+                    onChange={(event) =>
+                      setEditShiftStartsAt(
+                        event.target.value,
+                      )
+                    }
+                  />
+                </label>
+
+                <label className="handover-field">
+                  <span>Fin</span>
+
+                  <input
+                    type="datetime-local"
+                    value={editShiftEndsAt}
+                    onChange={(event) =>
+                      setEditShiftEndsAt(
+                        event.target.value,
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <div className="handover-form-actions">
+                <button
+                  className="shift-secondary-action"
+                  type="button"
+                  onClick={() =>
+                    setShowEditShiftForm(false)
+                  }
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  className="shift-primary-action"
+                  type="submit"
+                  disabled={
+                    savingShiftEdit ||
+                    !editShiftName.trim() ||
+                    !editShiftStartsAt ||
+                    !editShiftEndsAt
+                  }
+                >
+                  {savingShiftEdit
+                    ? 'Guardando...'
+                    : 'Guardar cambios'}
+                </button>
+              </div>
+            </form>
+          )}
 
         {error && (
           <p className="login-error">{error}</p>
@@ -2553,10 +2879,121 @@ function App() {
                     </p>
                   </div>
 
-                  <span className="section-count">
-                    {shifts.length}
-                  </span>
+
+                  <div className="section-heading-actions">
+                    <span className="section-count">
+                      {shifts.length}
+                    </span>
+
+                    {(
+                      currentMembership?.role === 'OWNER' ||
+                      currentMembership?.role === 'MANAGER'
+                    ) && (
+                      <button
+                        className="shift-secondary-action"
+                        type="button"
+                        onClick={() =>
+                          setShowCreateShiftForm(
+                            (current) => !current,
+                          )
+                        }
+                      >
+                        {showCreateShiftForm
+                          ? 'Cerrar'
+                          : '+ Crear turno'}
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+
+                {showCreateShiftForm && (
+                  <form
+                    className="shift-create-form"
+                    onSubmit={handleCreateShift}
+                  >
+                    <div className="handover-form-heading">
+                      <strong>Nuevo turno</strong>
+                      <span>
+                        Define el nombre y el horario del turno.
+                      </span>
+                    </div>
+
+                    <label className="handover-field">
+                      <span>Nombre</span>
+
+                      <input
+                        type="text"
+                        maxLength={120}
+                        value={newShiftName}
+                        onChange={(event) =>
+                          setNewShiftName(event.target.value)
+                        }
+                        placeholder="Ej.: Turno de mañana"
+                      />
+                    </label>
+
+                    <div className="handover-item-form-row">
+                      <label className="handover-field">
+                        <span>Inicio</span>
+
+                        <input
+                          type="datetime-local"
+                          value={newShiftStartsAt}
+                          onChange={(event) =>
+                            setNewShiftStartsAt(
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label className="handover-field">
+                        <span>Fin</span>
+
+                        <input
+                          type="datetime-local"
+                          value={newShiftEndsAt}
+                          onChange={(event) =>
+                            setNewShiftEndsAt(
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    <div className="handover-form-actions">
+                      <button
+                        className="shift-secondary-action"
+                        type="button"
+                        onClick={() => {
+                          setShowCreateShiftForm(false)
+                          setNewShiftName('')
+                          setNewShiftStartsAt('')
+                          setNewShiftEndsAt('')
+                        }}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        className="shift-primary-action"
+                        type="submit"
+                        disabled={
+                          savingShift ||
+                          !newShiftName.trim() ||
+                          !newShiftStartsAt ||
+                          !newShiftEndsAt
+                        }
+                      >
+                        {savingShift
+                          ? 'Creando...'
+                          : 'Crear turno'}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 <div className="shifts-grid">
                   {shifts.map((shift) => (
