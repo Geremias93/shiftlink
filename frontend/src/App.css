@@ -2331,3 +2331,79 @@
     padding: 20px;
   }
 }
+
+/* ========================================
+   SHIFT ASSIGNMENT MANAGEMENT
+   ======================================== */
+
+.shift-assignment-tools {
+  margin-bottom: 16px;
+}
+
+.shift-assignment-tools > .shift-secondary-action {
+  min-height: 42px;
+  padding: 9px 15px;
+  font-size: 14px;
+}
+
+.shift-person-card {
+  justify-content: flex-start;
+}
+
+.shift-person-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.shift-person-remove {
+  flex: 0 0 auto;
+  min-height: 38px;
+  margin-left: auto;
+  padding: 8px 13px;
+  border: 1px solid #ead7da;
+  border-radius: 10px;
+  background: #fffafa;
+  color: #a94c58;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.shift-person-remove:hover:not(:disabled) {
+  border-color: #ddb9be;
+  background: #fff2f3;
+  color: #923b47;
+}
+
+.shift-person-remove:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.shift-assignment-form {
+  padding: 16px;
+  border: 1px solid #e1e6ef;
+  border-radius: 14px;
+  background: #f8faff;
+}
+
+@media (max-width: 600px) {
+  .shift-person-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .shift-person-remove {
+    width: 100%;
+    margin: 2px 0 0;
+  }
+
+  .shift-assignment-tools > .shift-secondary-action {
+    width: 100%;
+  }
+}

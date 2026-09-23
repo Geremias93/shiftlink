@@ -12,6 +12,17 @@ type Company = {
 }
 
 
+type Membership = {
+  membershipId: string
+  userId: string
+  firstName: string
+  lastName: string
+  email: string
+  role: 'OWNER' | 'MANAGER' | 'EMPLOYEE'
+  active: boolean
+}
+
+
 type Location = {
   id: string
   companyId: string
@@ -90,6 +101,9 @@ function App() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [selectedCompany, setSelectedCompany] =
     useState<Company | null>(null)
+
+  const [currentMembership, setCurrentMembership] =
+    useState<Membership | null>(null)
   const [locations, setLocations] = useState<Location[]>([])
   const [loadingLocations, setLoadingLocations] = useState(false)
 
@@ -104,6 +118,21 @@ function App() {
 
   const [assignments, setAssignments] =
     useState<ShiftAssignment[]>([])
+
+  const [companyMembers, setCompanyMembers] =
+    useState<Membership[]>([])
+
+  const [showAssignmentForm, setShowAssignmentForm] =
+    useState(false)
+
+  const [assignmentMembershipId, setAssignmentMembershipId] =
+    useState('')
+
+  const [savingAssignment, setSavingAssignment] =
+    useState(false)
+
+  const [removingAssignmentId, setRemovingAssignmentId] =
+    useState<string | null>(null)
 
   
   const [outgoingHandover, setOutgoingHandover] =
@@ -248,23 +277,39 @@ function App() {
       setError('')
 
       try {
-        const response = await fetch(
-          `/api/companies/${companyId}/locations`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        )
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        }
 
-        if (!response.ok) {
+        const [locationsResponse, membershipResponse] =
+          await Promise.all([
+            fetch(
+              `/api/companies/${companyId}/locations`,
+              { headers },
+            ),
+            fetch(
+              `/api/companies/${companyId}/members/me`,
+              { headers },
+            ),
+          ])
+
+        if (
+          !locationsResponse.ok ||
+          !membershipResponse.ok
+        ) {
           throw new Error(
-            'No se han podido cargar los locales',
+            'No se ha podido cargar la empresa',
           )
         }
 
-        const data: Location[] = await response.json()
+        const data: Location[] =
+          await locationsResponse.json()
+
+        const membershipData: Membership =
+          await membershipResponse.json()
+
         setLocations(data)
+        setCurrentMembership(membershipData)
       } catch (err) {
         setError(
           err instanceof Error
@@ -278,6 +323,56 @@ function App() {
 
     loadLocations()
   }, [token, selectedCompany])
+
+
+  useEffect(() => {
+    if (
+      !token ||
+      !selectedCompany ||
+      !currentMembership
+    ) {
+      return
+    }
+
+    if (
+      currentMembership.role !== 'OWNER' &&
+      currentMembership.role !== 'MANAGER'
+    ) {
+      return
+    }
+
+    const companyId = selectedCompany.id
+
+    async function loadCompanyMembers() {
+      try {
+        const response = await fetch(
+          `/api/companies/${companyId}/members`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error(
+            'No se han podido cargar los empleados',
+          )
+        }
+
+        const data: Membership[] = await response.json()
+        setCompanyMembers(data)
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Ha ocurrido un error',
+        )
+      }
+    }
+
+    loadCompanyMembers()
+  }, [token, selectedCompany, currentMembership])
 
 
   useEffect(() => {
@@ -469,6 +564,119 @@ function App() {
     selectedLocation,
     selectedShift,
   ])
+
+  async function handleAssignMember(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !assignmentMembershipId
+    ) {
+      return
+    }
+
+    setSavingAssignment(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/assignments`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            membershipId: assignmentMembershipId,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido asignar el empleado',
+        )
+      }
+
+      const data: ShiftAssignment =
+        await response.json()
+
+      setAssignments((current) => [
+        ...current,
+        data,
+      ])
+
+      setAssignmentMembershipId('')
+      setShowAssignmentForm(false)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSavingAssignment(false)
+    }
+  }
+
+  async function handleRemoveAssignment(
+    assignment: ShiftAssignment,
+  ) {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift
+    ) {
+      return
+    }
+
+    setRemovingAssignmentId(
+      assignment.assignmentId,
+    )
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/assignments/${assignment.assignmentId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido quitar al empleado del turno',
+        )
+      }
+
+      setAssignments((current) =>
+        current.filter(
+          (item) =>
+            item.assignmentId !==
+            assignment.assignmentId,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setRemovingAssignmentId(null)
+    }
+  }
+
 
   async function handleCreateHandover(
     event: FormEvent<HTMLFormElement>,
@@ -1188,6 +1396,95 @@ function App() {
                   </span>
                 </div>
 
+
+                {(
+                  currentMembership?.role === 'OWNER' ||
+                  currentMembership?.role === 'MANAGER'
+                ) && (
+                  <div className="shift-assignment-tools">
+                    {!showAssignmentForm ? (
+                      <button
+                        className="shift-secondary-action"
+                        type="button"
+                        onClick={() =>
+                          setShowAssignmentForm(true)
+                        }
+                      >
+                        + Asignar empleado
+                      </button>
+                    ) : (
+                      <form
+                        className="shift-assignment-form"
+                        onSubmit={handleAssignMember}
+                      >
+                        <label className="handover-field">
+                          <span>Empleado</span>
+
+                          <select
+                            value={assignmentMembershipId}
+                            onChange={(event) =>
+                              setAssignmentMembershipId(
+                                event.target.value,
+                              )
+                            }
+                          >
+                            <option value="">
+                              Selecciona un empleado
+                            </option>
+
+                            {companyMembers
+                              .filter(
+                                (member) =>
+                                  member.active &&
+                                  !assignments.some(
+                                    (assignment) =>
+                                      assignment.membershipId ===
+                                      member.membershipId,
+                                  ),
+                              )
+                              .map((member) => (
+                                <option
+                                  key={member.membershipId}
+                                  value={member.membershipId}
+                                >
+                                  {member.firstName}{' '}
+                                  {member.lastName} ·{' '}
+                                  {roleLabels[member.role]}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+
+                        <div className="handover-form-actions">
+                          <button
+                            className="shift-secondary-action"
+                            type="button"
+                            onClick={() => {
+                              setShowAssignmentForm(false)
+                              setAssignmentMembershipId('')
+                            }}
+                          >
+                            Cancelar
+                          </button>
+
+                          <button
+                            className="shift-primary-action"
+                            type="submit"
+                            disabled={
+                              !assignmentMembershipId ||
+                              savingAssignment
+                            }
+                          >
+                            {savingAssignment
+                              ? 'Asignando...'
+                              : 'Asignar'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
                 {assignments.length === 0 ? (
                   <div className="shift-empty-state">
                     <strong>
@@ -1223,6 +1520,30 @@ function App() {
                             {roleLabels[assignment.role]}
                           </small>
                         </div>
+
+                        {(
+                          currentMembership?.role === 'OWNER' ||
+                          currentMembership?.role === 'MANAGER'
+                        ) && (
+                          <button
+                            className="shift-person-remove"
+                            type="button"
+                            disabled={
+                              removingAssignmentId ===
+                              assignment.assignmentId
+                            }
+                            onClick={() =>
+                              handleRemoveAssignment(
+                                assignment,
+                              )
+                            }
+                          >
+                            {removingAssignmentId ===
+                            assignment.assignmentId
+                              ? 'Quitando...'
+                              : 'Quitar del turno'}
+                          </button>
+                        )}
                       </article>
                     ))}
                   </div>

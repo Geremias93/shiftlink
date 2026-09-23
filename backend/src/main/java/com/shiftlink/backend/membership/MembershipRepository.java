@@ -15,7 +15,7 @@ public interface MembershipRepository
     @EntityGraph(attributePaths = "user")
     List<Membership> findByCompany_IdAndActiveTrue(UUID companyId);
 
-    @EntityGraph(attributePaths = "company")
+    @EntityGraph(attributePaths = {"company", "user"})
     Optional<Membership> findByUser_IdAndCompany_IdAndActiveTrue(
         UUID userId,
         UUID companyId

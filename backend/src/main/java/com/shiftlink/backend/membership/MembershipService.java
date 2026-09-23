@@ -27,6 +27,18 @@ public class MembershipService {
     }
 
     @Transactional(readOnly = true)
+    public Membership findCurrentMembership(
+            UUID userId,
+            UUID companyId) {
+
+        return companyAccessService.requireMembership(
+            userId,
+            companyId
+        );
+    }
+
+
+    @Transactional(readOnly = true)
     public List<Membership> findAllByCompany(
             UUID userId,
             UUID companyId) {

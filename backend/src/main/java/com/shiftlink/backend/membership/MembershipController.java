@@ -29,6 +29,23 @@ public class MembershipController {
         this.membershipService = membershipService;
     }
 
+    @GetMapping("/me")
+    public MembershipResponse findCurrentMembership(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        Membership membership =
+            membershipService.findCurrentMembership(
+                userId,
+                companyId
+            );
+
+        return MembershipResponse.from(membership);
+    }
+
+
     @GetMapping
     public List<MembershipResponse> findAll(
             @AuthenticationPrincipal Jwt jwt,
