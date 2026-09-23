@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.shiftlink.backend.membership.AuthenticatedUserNotFoundException;
+import com.shiftlink.backend.membership.CompanyAccessDeniedException;
 import com.shiftlink.backend.shift.Shift;
 import com.shiftlink.backend.shift.ShiftService;
 import com.shiftlink.backend.user.UserAccount;
@@ -155,6 +156,43 @@ public class HandoverService {
         handover.setAcknowledgedBy(
             acknowledgedBy
         );
+
+        return handoverRepository.save(handover);
+    }
+
+
+
+    @Transactional
+    public Handover updateDraft(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId,
+            String notes) {
+
+        Handover handover = findByShift(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        if (handover.getStatus() != HandoverStatus.DRAFT) {
+            throw new InvalidHandoverStateException(
+                "Only draft handovers can be edited"
+            );
+        }
+
+        if (!handover.getCreatedBy().getId().equals(userId)) {
+            throw new CompanyAccessDeniedException();
+        }
+
+        String normalizedNotes =
+            notes == null || notes.isBlank()
+                ? null
+                : notes.trim();
+
+        handover.setNotes(normalizedNotes);
 
         return handoverRepository.save(handover);
     }
