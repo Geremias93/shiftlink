@@ -65,6 +65,20 @@ type ShiftAssignment = {
   createdAt: string
 }
 
+type Handover = {
+  id: string
+  shiftId: string
+  targetShiftId: string | null
+  createdByUserId: string
+  notes: string | null
+  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED'
+  submittedAt: string | null
+  acknowledgedAt: string | null
+  acknowledgedByUserId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -90,6 +104,37 @@ function App() {
 
   const [assignments, setAssignments] =
     useState<ShiftAssignment[]>([])
+
+  
+  const [outgoingHandover, setOutgoingHandover] =
+    useState<Handover | null>(null)
+
+  const [incomingHandovers, setIncomingHandovers] =
+    useState<Handover[]>([])
+
+  const [showHandoverForm, setShowHandoverForm] =
+    useState(false)
+
+  const [handoverTargetShiftId, setHandoverTargetShiftId] =
+    useState('')
+
+  const [handoverNotes, setHandoverNotes] =
+    useState('')
+
+  const [savingHandover, setSavingHandover] =
+    useState(false)
+
+  const [sendingHandover, setSendingHandover] =
+    useState(false)
+
+  const [
+    acknowledgingHandoverId,
+    setAcknowledgingHandoverId,
+  ] = useState<string | null>(null)
+
+
+
+
 
   const [loadingShiftDetail, setLoadingShiftDetail] =
     useState(false)
@@ -247,6 +292,7 @@ function App() {
 
 
   useEffect(() => {
+
     if (
       !token ||
       !selectedCompany ||
@@ -260,30 +306,61 @@ function App() {
     const locationId = selectedLocation.id
     const shiftId = selectedShift.id
 
-    async function loadShiftAssignments() {
+    async function loadShiftDetail() {
       setLoadingShiftDetail(true)
       setError('')
 
-      try {
-        const response = await fetch(
-          `/api/companies/${companyId}/locations/${locationId}/shifts/${shiftId}/assignments`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        )
+      setAssignments([])
+      setOutgoingHandover(null)
+      setIncomingHandovers([])
 
-        if (!response.ok) {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      }
+
+      const baseUrl =
+        `/api/companies/${companyId}/locations/${locationId}/shifts/${shiftId}`
+
+      try {
+        const [
+          assignmentsResponse,
+          outgoingResponse,
+          incomingResponse,
+        ] = await Promise.all([
+          fetch(`${baseUrl}/assignments`, { headers }),
+          fetch(`${baseUrl}/handover`, { headers }),
+          fetch(`${baseUrl}/incoming-handovers`, { headers }),
+        ])
+
+        if (
+          !assignmentsResponse.ok ||
+          !incomingResponse.ok ||
+          (
+            !outgoingResponse.ok &&
+            outgoingResponse.status !== 404
+          )
+        ) {
           throw new Error(
-            'No se han podido cargar los empleados del turno',
+            'No se ha podido cargar el detalle del turno',
           )
         }
 
-        const data: ShiftAssignment[] =
-          await response.json()
+        const assignmentsData: ShiftAssignment[] =
+          await assignmentsResponse.json()
 
-        setAssignments(data)
+        const incomingData: Handover[] =
+          await incomingResponse.json()
+
+        let outgoingData: Handover | null = null
+
+        if (outgoingResponse.ok) {
+          outgoingData =
+            await outgoingResponse.json()
+        }
+
+        setAssignments(assignmentsData)
+        setOutgoingHandover(outgoingData)
+        setIncomingHandovers(incomingData)
       } catch (err) {
         setError(
           err instanceof Error
@@ -295,13 +372,165 @@ function App() {
       }
     }
 
-    loadShiftAssignments()
+    loadShiftDetail()
+
   }, [
     token,
     selectedCompany,
     selectedLocation,
     selectedShift,
   ])
+
+  async function handleCreateHandover(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !handoverTargetShiftId
+    ) {
+      return
+    }
+
+    setSavingHandover(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetShiftId: handoverTargetShiftId,
+            notes: handoverNotes.trim() || null,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido guardar el borrador del relevo',
+        )
+      }
+
+      const data: Handover = await response.json()
+
+      setOutgoingHandover(data)
+      setShowHandoverForm(false)
+      setHandoverTargetShiftId('')
+      setHandoverNotes('')
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSavingHandover(false)
+    }
+  }
+
+  async function handleSubmitHandover() {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift ||
+      !outgoingHandover
+    ) {
+      return
+    }
+
+    setSendingHandover(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/submit`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido enviar el relevo',
+        )
+      }
+
+      const data: Handover = await response.json()
+
+      setOutgoingHandover(data)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setSendingHandover(false)
+    }
+  }
+
+  async function handleAcknowledgeHandover(
+    handover: Handover,
+  ) {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation
+    ) {
+      return
+    }
+
+    setAcknowledgingHandoverId(handover.id)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${handover.shiftId}/handover/acknowledge`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se ha podido confirmar la recepción del relevo',
+        )
+      }
+
+      const data: Handover = await response.json()
+
+      setIncomingHandovers((current) =>
+        current.map((item) =>
+          item.id === data.id ? data : item,
+        ),
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setAcknowledgingHandoverId(null)
+    }
+  }
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
@@ -369,67 +598,466 @@ function App() {
     selectedLocation &&
     selectedShift
   ) {
+    const shiftStatusLabels = {
+      SCHEDULED: 'Programado',
+      ACTIVE: 'Activo',
+      COMPLETED: 'Completado',
+      CANCELLED: 'Cancelado',
+    }
+
+    const roleLabels = {
+      OWNER: 'Propietario',
+      MANAGER: 'Responsable',
+      EMPLOYEE: 'Empleado',
+    }
+
+    function formatDetailDate(value: string) {
+      return new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(value))
+    }
+
+    function handoverStatusLabel(
+      status: Handover['status'],
+    ) {
+      if (status === 'DRAFT') {
+        return 'Borrador'
+      }
+
+      if (status === 'SUBMITTED') {
+        return 'Pendiente de confirmar'
+      }
+
+      return 'Confirmado'
+    }
+
     return (
-      <main className="companies-page">
+      <main className="shift-detail-page">
         <button
+          className="shift-back-button"
           type="button"
           onClick={() => {
             setSelectedShift(null)
             setAssignments([])
+            setOutgoingHandover(null)
+            setIncomingHandovers([])
           }}
         >
-          ← Volver a turnos
+          <span aria-hidden="true">←</span>
+          Volver a turnos
         </button>
 
-        <p className="eyebrow">TURNO</p>
+        <section className="shift-detail-hero">
+          <div className="shift-detail-title">
+            <div>
+              <p className="eyebrow">TURNO</p>
+              <h1>{selectedShift.name}</h1>
+            </div>
 
-        <h1>{selectedShift.name}</h1>
+            <span
+              className={`shift-status-badge shift-status-${selectedShift.status.toLowerCase()}`}
+            >
+              {shiftStatusLabels[selectedShift.status]}
+            </span>
+          </div>
 
-        <p>{selectedShift.status}</p>
+          <div className="shift-meta-grid">
+            <div className="shift-meta-item">
+              <span>Inicio</span>
+              <strong>
+                {formatDetailDate(selectedShift.startsAt)}
+              </strong>
+            </div>
 
-        <h2>
-          Empleados asignados ({assignments.length})
-        </h2>
+            <div className="shift-meta-item">
+              <span>Fin</span>
+              <strong>
+                {formatDetailDate(selectedShift.endsAt)}
+              </strong>
+            </div>
 
-        {loadingShiftDetail && (
-          <p>Cargando empleados...</p>
-        )}
+            <div className="shift-meta-item">
+              <span>Local</span>
+              <strong>{selectedLocation.name}</strong>
+            </div>
+          </div>
+        </section>
 
         {error && (
           <p className="login-error">{error}</p>
         )}
 
-        {!loadingShiftDetail &&
-          assignments.length === 0 && (
-            <p>
-              No hay empleados asignados a este turno.
-            </p>
-          )}
+        {loadingShiftDetail ? (
+          <section className="shift-loading-card">
+            <strong>Cargando turno...</strong>
+            <span>
+              Estamos preparando empleados y relevos.
+            </span>
+          </section>
+        ) : (
+          <>
+            <div className="shift-detail-columns">
+              <section className="shift-panel">
+                <div className="shift-section-heading">
+                  <div>
+                    <p className="shift-section-kicker">
+                      EQUIPO
+                    </p>
+                    <h2>Empleados asignados</h2>
+                  </div>
 
-        <section className="companies-grid">
-          {assignments.map((assignment) => (
-            <article
-              className="company-card"
-              key={assignment.assignmentId}
-            >
-              <span className="company-icon">
-                {assignment.firstName
-                  .charAt(0)
-                  .toUpperCase()}
-              </span>
+                  <span className="shift-count">
+                    {assignments.length}
+                  </span>
+                </div>
 
-              <span className="company-info">
-                <strong>
-                  {assignment.firstName}{' '}
-                  {assignment.lastName}
-                </strong>
+                {assignments.length === 0 ? (
+                  <div className="shift-empty-state">
+                    <strong>
+                      Sin empleados asignados
+                    </strong>
+                    <span>
+                      Todavía no hay nadie asignado a este
+                      turno.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="shift-people-list">
+                    {assignments.map((assignment) => (
+                      <article
+                        className="shift-person-card"
+                        key={assignment.assignmentId}
+                      >
+                        <span className="shift-person-avatar">
+                          {assignment.firstName
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
 
-                <small>{assignment.email}</small>
-                <small>{assignment.role}</small>
-              </span>
-            </article>
-          ))}
-        </section>
+                        <div className="shift-person-info">
+                          <strong>
+                            {assignment.firstName}{' '}
+                            {assignment.lastName}
+                          </strong>
+
+                          <span>{assignment.email}</span>
+
+                          <small>
+                            {roleLabels[assignment.role]}
+                          </small>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="shift-panel">
+                <div className="shift-section-heading">
+                  <div>
+                    <p className="shift-section-kicker">
+                      ENTREGA
+                    </p>
+                    <h2>Relevo para el siguiente turno</h2>
+                  </div>
+                </div>
+
+                {!outgoingHandover ? (
+                  <div className="shift-empty-state">
+                    <strong>
+                      Todavía no hay relevo
+                    </strong>
+
+                    <span>
+                      Deja la información importante para
+                      las personas del siguiente turno.
+                    </span>
+
+                    {!showHandoverForm && (
+                      <button
+                        className="shift-primary-action"
+                        type="button"
+                        onClick={() => {
+                          setShowHandoverForm(true)
+
+                          const nextShift = [...shifts]
+                            .filter(
+                              (shift) =>
+                                shift.id !== selectedShift.id &&
+                                shift.status === 'SCHEDULED' &&
+                                new Date(
+                                  shift.startsAt,
+                                ).getTime() >=
+                                  new Date(
+                                    selectedShift.endsAt,
+                                  ).getTime(),
+                            )
+                            .sort(
+                              (a, b) =>
+                                new Date(a.startsAt).getTime() -
+                                new Date(b.startsAt).getTime(),
+                            )[0]
+
+                          setHandoverTargetShiftId(
+                            nextShift?.id ?? '',
+                          )
+                        }}
+                      >
+                        Preparar relevo
+                      </button>
+                    )}
+
+                    {showHandoverForm && (
+                      <form
+                        className="handover-form"
+                        onSubmit={handleCreateHandover}
+                      >
+                        <div className="handover-form-heading">
+                          <strong>Preparar relevo</strong>
+                          <span>
+                            Elige el turno que recibirá la información.
+                          </span>
+                        </div>
+
+                        <label className="handover-field">
+                          <span>Siguiente turno</span>
+
+                          <select
+                            value={handoverTargetShiftId}
+                            onChange={(event) =>
+                              setHandoverTargetShiftId(
+                                event.target.value,
+                              )
+                            }
+                          >
+                            <option value="">
+                              Selecciona un turno
+                            </option>
+
+                            {[...shifts]
+                              .filter(
+                                (shift) =>
+                                  shift.id !== selectedShift.id &&
+                                  shift.status === 'SCHEDULED' &&
+                                  new Date(
+                                    shift.startsAt,
+                                  ).getTime() >=
+                                    new Date(
+                                      selectedShift.endsAt,
+                                    ).getTime(),
+                              )
+                              .sort(
+                                (a, b) =>
+                                  new Date(
+                                    a.startsAt,
+                                  ).getTime() -
+                                  new Date(
+                                    b.startsAt,
+                                  ).getTime(),
+                              )
+                              .map((shift) => (
+                                <option
+                                  key={shift.id}
+                                  value={shift.id}
+                                >
+                                  {shift.name} ·{' '}
+                                  {formatDetailDate(
+                                    shift.startsAt,
+                                  )}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+
+                        <label className="handover-field">
+                          <span>
+                            Notas para el siguiente turno
+                          </span>
+
+                          <textarea
+                            rows={5}
+                            value={handoverNotes}
+                            onChange={(event) =>
+                              setHandoverNotes(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Ej.: queda pendiente revisar el cierre de caja..."
+                          />
+                        </label>
+
+                        <div className="handover-form-actions">
+                          <button
+                            className="shift-secondary-action"
+                            type="button"
+                            onClick={() => {
+                              setShowHandoverForm(false)
+                              setHandoverTargetShiftId('')
+                              setHandoverNotes('')
+                            }}
+                          >
+                            Cancelar
+                          </button>
+
+                          <button
+                            className="shift-primary-action"
+                            type="submit"
+                            disabled={
+                              !handoverTargetShiftId ||
+                              savingHandover
+                            }
+                          >
+                            {savingHandover
+                              ? 'Guardando...'
+                              : 'Guardar borrador'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                ) : (
+                  <article className="handover-card">
+                    <div className="handover-card-top">
+                      <span
+                        className={`handover-status handover-status-${outgoingHandover.status.toLowerCase()}`}
+                      >
+                        {handoverStatusLabel(
+                          outgoingHandover.status,
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="handover-route">
+                      <span>Destino</span>
+                      <strong>
+                        {shifts.find(
+                          (shift) =>
+                            shift.id ===
+                            outgoingHandover.targetShiftId,
+                        )?.name ?? 'Turno receptor'}
+                      </strong>
+                    </div>
+
+                    <div className="handover-notes">
+                      <span>Notas del relevo</span>
+                      <p>
+                        {outgoingHandover.notes ||
+                          'Sin notas añadidas.'}
+                      </p>
+                    </div>
+
+                    {outgoingHandover.status === 'DRAFT' && (
+                      <div className="handover-card-actions">
+                        <button
+                          className="shift-primary-action"
+                          type="button"
+                          disabled={sendingHandover}
+                          onClick={handleSubmitHandover}
+                        >
+                          {sendingHandover
+                            ? 'Enviando...'
+                            : 'Enviar relevo'}
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                )}
+              </section>
+            </div>
+
+            <section className="shift-panel shift-incoming-panel">
+              <div className="shift-section-heading">
+                <div>
+                  <p className="shift-section-kicker">
+                    RECEPCIÓN
+                  </p>
+                  <h2>Relevos recibidos</h2>
+                </div>
+
+                <span className="shift-count">
+                  {incomingHandovers.length}
+                </span>
+              </div>
+
+              {incomingHandovers.length === 0 ? (
+                <div className="shift-empty-state">
+                  <strong>
+                    No hay relevos recibidos
+                  </strong>
+                  <span>
+                    Los relevos enviados a este turno
+                    aparecerán aquí.
+                  </span>
+                </div>
+              ) : (
+                <div className="incoming-handovers-grid">
+                  {incomingHandovers.map((handover) => (
+                    <article
+                      className="handover-card"
+                      key={handover.id}
+                    >
+                      <div className="handover-card-top">
+                        <span
+                          className={`handover-status handover-status-${handover.status.toLowerCase()}`}
+                        >
+                          {handoverStatusLabel(
+                            handover.status,
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="handover-route">
+                        <span>Origen</span>
+                        <strong>
+                          {shifts.find(
+                            (shift) =>
+                              shift.id ===
+                              handover.shiftId,
+                          )?.name ?? 'Turno anterior'}
+                        </strong>
+                      </div>
+
+                      <div className="handover-notes">
+                        <span>Notas del relevo</span>
+                        <p>
+                          {handover.notes ||
+                            'Sin notas añadidas.'}
+                        </p>
+                      </div>
+
+                      {handover.status === 'SUBMITTED' && (
+                        <div className="handover-card-actions">
+                          <button
+                            className="shift-primary-action"
+                            type="button"
+                            disabled={
+                              acknowledgingHandoverId ===
+                              handover.id
+                            }
+                            onClick={() =>
+                              handleAcknowledgeHandover(
+                                handover,
+                              )
+                            }
+                          >
+                            {acknowledgingHandoverId ===
+                            handover.id
+                              ? 'Confirmando...'
+                              : 'Confirmar recepción'}
+                          </button>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </main>
     )
   }
