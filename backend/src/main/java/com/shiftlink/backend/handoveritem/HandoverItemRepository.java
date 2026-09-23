@@ -22,4 +22,11 @@ public interface HandoverItemRepository
         UUID itemId,
         UUID handoverId
     );
+
+
+    boolean existsByHandover_IdAndCarriedFrom_Id(
+        UUID handoverId,
+        UUID carriedFromItemId
+    );
+
 }

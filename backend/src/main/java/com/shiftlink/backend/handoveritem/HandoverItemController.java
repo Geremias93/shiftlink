@@ -144,4 +144,31 @@ public class HandoverItemController {
             .toList();
     }
 
+
+
+    @PostMapping("/carry-from/{sourceShiftId}")
+    public List<HandoverItemResponse> carryOpenItems(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId,
+            @PathVariable UUID sourceShiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        return handoverItemService
+            .carryOpenItems(
+                userId,
+                companyId,
+                locationId,
+                sourceShiftId,
+                shiftId
+            )
+            .stream()
+            .map(HandoverItemResponse::from)
+            .toList();
+    }
+
 }

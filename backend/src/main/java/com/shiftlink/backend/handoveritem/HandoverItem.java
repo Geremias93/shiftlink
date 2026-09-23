@@ -52,6 +52,11 @@ public class HandoverItem {
     private HandoverItemStatus status =
         HandoverItemStatus.OPEN;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "carried_from_item_id")
+    private HandoverItem carriedFrom;
+
     @Column(name = "resolved_at")
     private OffsetDateTime resolvedAt;
 
@@ -124,6 +129,15 @@ public class HandoverItem {
 
     public void setStatus(HandoverItemStatus status) {
         this.status = status;
+    }
+
+
+    public HandoverItem getCarriedFrom() {
+        return carriedFrom;
+    }
+
+    public void setCarriedFrom(HandoverItem carriedFrom) {
+        this.carriedFrom = carriedFrom;
     }
 
     public OffsetDateTime getResolvedAt() {

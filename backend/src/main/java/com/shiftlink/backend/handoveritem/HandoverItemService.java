@@ -171,4 +171,81 @@ public class HandoverItemService {
             );
     }
 
+
+
+    @Transactional
+    public List<HandoverItem> carryOpenItems(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID sourceShiftId,
+            UUID targetShiftId) {
+
+        if (sourceShiftId.equals(targetShiftId)) {
+            throw new InvalidHandoverItemStateException(
+                "Source and target shifts must be different"
+            );
+        }
+
+        Handover sourceHandover = handoverService.findByShift(
+            userId,
+            companyId,
+            locationId,
+            sourceShiftId
+        );
+
+        Handover targetHandover = handoverService.findByShift(
+            userId,
+            companyId,
+            locationId,
+            targetShiftId
+        );
+
+        if (sourceHandover.getStatus() == HandoverStatus.DRAFT) {
+            throw new InvalidHandoverStateException(
+                "Open items can only be carried from a submitted handover"
+            );
+        }
+
+        if (targetHandover.getStatus() != HandoverStatus.DRAFT) {
+            throw new InvalidHandoverStateException(
+                "Open items can only be carried into a draft handover"
+            );
+        }
+
+        if (!targetHandover.getCreatedBy().getId().equals(userId)) {
+            throw new CompanyAccessDeniedException();
+        }
+
+        List<HandoverItem> sourceItems =
+            handoverItemRepository
+                .findByHandover_IdAndStatusOrderByCreatedAtAsc(
+                    sourceHandover.getId(),
+                    HandoverItemStatus.OPEN
+                );
+
+        return sourceItems.stream()
+            .filter(item ->
+                !handoverItemRepository
+                    .existsByHandover_IdAndCarriedFrom_Id(
+                        targetHandover.getId(),
+                        item.getId()
+                    )
+            )
+            .map(item -> {
+                HandoverItem carried = new HandoverItem(
+                    targetHandover,
+                    item.getType(),
+                    item.getTitle(),
+                    item.getDescription(),
+                    item.getPriority()
+                );
+
+                carried.setCarriedFrom(item);
+
+                return handoverItemRepository.save(carried);
+            })
+            .toList();
+    }
+
 }

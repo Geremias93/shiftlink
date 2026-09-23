@@ -6,6 +6,8 @@ import java.util.UUID;
 public record HandoverItemResponse(
     UUID id,
     UUID handoverId,
+
+    UUID carriedFromItemId,
     HandoverItemType type,
     String title,
     String description,
@@ -20,6 +22,11 @@ public record HandoverItemResponse(
     public static HandoverItemResponse from(
             HandoverItem item) {
 
+        UUID carriedFromItemId =
+            item.getCarriedFrom() == null
+                ? null
+                : item.getCarriedFrom().getId();
+
         UUID resolvedByUserId =
             item.getResolvedBy() == null
                 ? null
@@ -28,6 +35,7 @@ public record HandoverItemResponse(
         return new HandoverItemResponse(
             item.getId(),
             item.getHandover().getId(),
+            carriedFromItemId,
             item.getType(),
             item.getTitle(),
             item.getDescription(),
