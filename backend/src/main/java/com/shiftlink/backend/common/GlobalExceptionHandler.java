@@ -8,7 +8,9 @@ import com.shiftlink.backend.auth.InvalidCredentialsException;
 import com.shiftlink.backend.membership.CompanyAccessDeniedException;
 import com.shiftlink.backend.membership.MembershipUserNotFoundException;
 import com.shiftlink.backend.membership.MembershipAlreadyActiveException;
+import com.shiftlink.backend.membership.MembershipAlreadyInactiveException;
 import com.shiftlink.backend.membership.InvalidMembershipRoleException;
+import com.shiftlink.backend.membership.MembershipNotFoundException;
 import com.shiftlink.backend.location.LocationNotFoundException;
 import com.shiftlink.backend.shift.InvalidShiftTimeException;
 import com.shiftlink.backend.shift.ShiftNotFoundException;
@@ -330,6 +332,50 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(MembershipNotFoundException.class)
+    public ResponseEntity<ApiError> handleMembershipNotFound(
+            MembershipNotFoundException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(MembershipAlreadyInactiveException.class)
+    public ResponseEntity<ApiError> handleMembershipAlreadyInactive(
+            MembershipAlreadyInactiveException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),

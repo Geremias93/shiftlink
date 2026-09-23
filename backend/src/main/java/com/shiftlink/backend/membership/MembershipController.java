@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,4 +65,44 @@ public class MembershipController {
             .status(HttpStatus.CREATED)
             .body(MembershipResponse.from(membership));
     }
+
+
+    @PatchMapping("/{membershipId}/role")
+    public MembershipResponse updateRole(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID membershipId,
+            @Valid @RequestBody UpdateMembershipRoleRequest request) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        Membership membership = membershipService.updateRole(
+            userId,
+            companyId,
+            membershipId,
+            request.role()
+        );
+
+        return MembershipResponse.from(membership);
+    }
+
+
+
+    @PostMapping("/{membershipId}/deactivate")
+    public MembershipResponse deactivateMember(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID membershipId) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        Membership membership = membershipService.deactivateMember(
+            userId,
+            companyId,
+            membershipId
+        );
+
+        return MembershipResponse.from(membership);
+    }
+
 }

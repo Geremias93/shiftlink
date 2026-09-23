@@ -32,4 +32,12 @@ public interface MembershipRepository
         UUID companyId
     );
 
+
+
+    @EntityGraph(attributePaths = "user")
+    Optional<Membership> findByIdAndCompany_Id(
+        UUID membershipId,
+        UUID companyId
+    );
+
 }

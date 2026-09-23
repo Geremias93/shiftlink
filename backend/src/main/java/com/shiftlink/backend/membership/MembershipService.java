@@ -110,4 +110,87 @@ public class MembershipService {
         return membershipRepository.save(membership);
     }
 
+
+
+    @Transactional
+    public Membership updateRole(
+            UUID requesterUserId,
+            UUID companyId,
+            UUID membershipId,
+            MembershipRole newRole) {
+
+        companyAccessService.requireAnyRole(
+            requesterUserId,
+            companyId,
+            MembershipRole.OWNER
+        );
+
+        Membership membership = membershipRepository
+            .findByIdAndCompany_Id(
+                membershipId,
+                companyId
+            )
+            .orElseThrow(MembershipNotFoundException::new);
+
+        if (membership.getRole() == MembershipRole.OWNER) {
+            throw new InvalidMembershipRoleException(
+                "No se puede modificar el rol del propietario"
+            );
+        }
+
+        if (newRole == MembershipRole.OWNER) {
+            throw new InvalidMembershipRoleException(
+                "No se puede asignar el rol de propietario mediante este endpoint"
+            );
+        }
+
+        membership.setRole(newRole);
+
+        return membershipRepository.save(membership);
+    }
+
+
+
+    @Transactional
+    public Membership deactivateMember(
+            UUID requesterUserId,
+            UUID companyId,
+            UUID membershipId) {
+
+        Membership requesterMembership =
+            companyAccessService.requireAnyRole(
+                requesterUserId,
+                companyId,
+                MembershipRole.OWNER,
+                MembershipRole.MANAGER
+            );
+
+        Membership membership = membershipRepository
+            .findByIdAndCompany_Id(
+                membershipId,
+                companyId
+            )
+            .orElseThrow(MembershipNotFoundException::new);
+
+        if (!membership.isActive()) {
+            throw new MembershipAlreadyInactiveException();
+        }
+
+        if (membership.getRole() == MembershipRole.OWNER) {
+            throw new InvalidMembershipRoleException(
+                "No se puede desactivar al propietario de la empresa"
+            );
+        }
+
+        if (requesterMembership.getRole() == MembershipRole.MANAGER
+                && membership.getRole() != MembershipRole.EMPLOYEE) {
+
+            throw new CompanyAccessDeniedException();
+        }
+
+        membership.setActive(false);
+
+        return membershipRepository.save(membership);
+    }
+
 }
