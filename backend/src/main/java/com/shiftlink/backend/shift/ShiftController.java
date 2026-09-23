@@ -85,4 +85,27 @@ public class ShiftController {
             .map(ShiftResponse::from)
             .toList();
     }
+
+    @GetMapping("/{shiftId}")
+    public ShiftResponse findById(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID companyId,
+            @PathVariable UUID locationId,
+            @PathVariable UUID shiftId) {
+
+        UUID userId = UUID.fromString(
+            jwt.getSubject()
+        );
+
+        Shift shift = shiftService.findById(
+            userId,
+            companyId,
+            locationId,
+            shiftId
+        );
+
+        return ShiftResponse.from(shift);
+    }
+
+
 }

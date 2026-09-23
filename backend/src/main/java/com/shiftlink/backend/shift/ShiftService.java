@@ -90,4 +90,33 @@ public class ShiftService {
                 locationId
             );
     }
+
+    @Transactional(readOnly = true)
+    public Shift findById(
+            UUID userId,
+            UUID companyId,
+            UUID locationId,
+            UUID shiftId) {
+
+        companyAccessService.requireMembership(
+            userId,
+            companyId
+        );
+
+        locationRepository
+            .findByIdAndCompany_IdAndActiveTrue(
+                locationId,
+                companyId
+            )
+            .orElseThrow(LocationNotFoundException::new);
+
+        return shiftRepository
+            .findByIdAndLocation_Id(
+                shiftId,
+                locationId
+            )
+            .orElseThrow(ShiftNotFoundException::new);
+    }
+
+
 }
