@@ -6,7 +6,7 @@ El objetivo es sencillo: **que la información importante no se pierda cuando un
 
 Los empleados podrán dejar relevos estructurados, registrar incidencias y tareas pendientes, mientras que el siguiente turno podrá consultar esa información y confirmar que se hace cargo de ella.
 
-## 💡 Problema que resuelve
+##  Problema que resuelve
 
 En muchos pequeños y medianos negocios, los cambios de turno todavía se gestionan mediante:
 
@@ -19,7 +19,7 @@ Esto puede provocar que incidencias, tareas o información importante se pierdan
 
 ShiftLink busca convertir esa información en un sistema **estructurado, trazable y accesible**.
 
-## 🔄 Flujo principal
+##  Flujo principal
 
 ```text
 Empleado inicia turno
@@ -39,7 +39,7 @@ Confirma lectura y asume pendientes
 Los asuntos no resueltos continúan abiertos
 ```
 
-## 🏗️ Arquitectura actual
+##  Arquitectura actual
 
 ```text
 Cliente
@@ -58,7 +58,7 @@ Spring Boot
        PostgreSQL
 ```
 
-## 🛠️ Tecnologías
+##  Tecnologías
 
 ### Backend
 
@@ -93,7 +93,7 @@ Spring Boot
 - Diseño responsive
 - PWA
 
-## ✅ Funcionalidades implementadas
+##  Funcionalidades implementadas
 
 Actualmente ShiftLink dispone de:
 
@@ -114,7 +114,7 @@ Actualmente ShiftLink dispone de:
 - Validación de peticiones
 - Gestión global de errores de API
 
-## 👥 Modelo multiempresa
+##  Modelo multiempresa
 
 ShiftLink utiliza un sistema de membresías:
 
@@ -190,7 +190,7 @@ memberships
 companies
 ```
 
-## 🐳 Ejecutar el proyecto en local
+##  Ejecutar el proyecto en local
 
 ### Requisitos
 
@@ -254,7 +254,7 @@ Comprobación de estado:
 GET http://localhost:8080/api/health
 ```
 
-## 🚧 Próximos pasos
+##  Próximos pasos
 
 El proyecto continúa en desarrollo. Las siguientes funcionalidades previstas son:
 
@@ -276,7 +276,7 @@ El proyecto continúa en desarrollo. Las siguientes funcionalidades previstas so
 - CI/CD con GitHub Actions
 - Despliegue en producción
 
-## 🎯 Objetivo del proyecto
+##  Objetivo del proyecto
 
 ShiftLink está siendo desarrollado como un producto SaaS real y, al mismo tiempo, como un proyecto Full Stack para aplicar buenas prácticas de desarrollo de software:
 
@@ -291,7 +291,7 @@ ShiftLink está siendo desarrollado como un producto SaaS real y, al mismo tiemp
 - Testing
 - CI/CD
 
-## 👨‍💻 Autor
+##  Autor
 
 **Geremias93**
 
