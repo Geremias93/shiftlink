@@ -1492,6 +1492,17 @@ function App() {
       return 'Confirmado'
     }
 
+
+    const isCurrentUserAssigned = assignments.some(
+      (assignment) =>
+        assignment.userId === currentMembership?.userId,
+    )
+
+    const canManageOutgoingHandover =
+      isCurrentUserAssigned &&
+      outgoingHandover?.createdByUserId ===
+        currentMembership?.userId
+
     return (
       <main className="shift-detail-page">
         <button
@@ -1897,7 +1908,7 @@ function App() {
                       las personas del siguiente turno.
                     </span>
 
-                    {!showHandoverForm && (
+                    {isCurrentUserAssigned && !showHandoverForm && (
                       <button
                         className="shift-primary-action"
                         type="button"
@@ -1931,7 +1942,7 @@ function App() {
                       </button>
                     )}
 
-                    {showHandoverForm && (
+                    {isCurrentUserAssigned && showHandoverForm && (
                       <form
                         className="handover-form"
                         onSubmit={handleCreateHandover}
@@ -2121,7 +2132,8 @@ function App() {
                           ))}
                         </div>
                       )}
-                      {outgoingHandover.status === 'DRAFT' && (
+                      {outgoingHandover.status === 'DRAFT' &&
+                        canManageOutgoingHandover && (
                         <div className="handover-item-create">
                           {!showHandoverItemForm ? (
                             <button
@@ -2273,7 +2285,8 @@ function App() {
                     </div>
 
 
-                    {outgoingHandover.status === 'DRAFT' && (
+                    {outgoingHandover.status === 'DRAFT' &&
+                      canManageOutgoingHandover && (
                       <>
                         {!showHandoverForm && (
                           <div className="handover-card-actions">
