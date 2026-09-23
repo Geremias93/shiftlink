@@ -19,6 +19,10 @@ import com.shiftlink.backend.handover.HandoverNotFoundException;
 import com.shiftlink.backend.handover.InvalidHandoverStateException;
 import com.shiftlink.backend.handoveritem.HandoverItemNotFoundException;
 import com.shiftlink.backend.handoveritem.InvalidHandoverItemStateException;
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentMembershipNotFoundException;
+import com.shiftlink.backend.shiftassignment.InactiveShiftAssignmentMembershipException;
+import com.shiftlink.backend.shiftassignment.DuplicateShiftAssignmentException;
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -376,6 +380,92 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(ShiftAssignmentMembershipNotFoundException.class)
+    public ResponseEntity<ApiError> handleShiftAssignmentMembershipNotFound(
+            ShiftAssignmentMembershipNotFoundException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(InactiveShiftAssignmentMembershipException.class)
+    public ResponseEntity<ApiError> handleInactiveShiftAssignmentMembership(
+            InactiveShiftAssignmentMembershipException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+    @ExceptionHandler(DuplicateShiftAssignmentException.class)
+    public ResponseEntity<ApiError> handleDuplicateShiftAssignment(
+            DuplicateShiftAssignmentException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ApiError error = new ApiError(
+            OffsetDateTime.now(),
+            status.value(),
+            status.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI()
+        );
+
+        return ResponseEntity
+            .status(status)
+            .body(error);
+    }
+
+
+
+    @ExceptionHandler(ShiftAssignmentNotFoundException.class)
+    public ResponseEntity<ApiError> handleShiftAssignmentNotFound(
+            ShiftAssignmentNotFoundException exception,
+            HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
 
         ApiError error = new ApiError(
             OffsetDateTime.now(),
