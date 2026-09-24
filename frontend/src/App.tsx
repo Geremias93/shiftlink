@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { WorkspaceNav } from './components/WorkspaceNav'
 import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
+import { ShiftCard } from './components/ShiftCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -12,7 +13,6 @@ import {
   itemTypeLabel,
   priorityLabel,
   roleLabels,
-  shiftStatusLabel,
   shiftStatusLabels,
 } from './utils/formatters'
 
@@ -2980,49 +2980,11 @@ function App() {
 
                 <div className="shifts-grid">
                   {shifts.map((shift) => (
-                    <button
-                      className={
-                        shift.status === 'ACTIVE'
-                          ? 'shift-card shift-card-current'
-                          : 'shift-card'
-                      }
-                      type="button"
+                    <ShiftCard
                       key={shift.id}
-                      onClick={() => setSelectedShift(shift)}
-                    >
-                      <div className="shift-card-top">
-                        <span
-                          className={
-                            `shift-status ` +
-                            `shift-status-${shift.status.toLowerCase()}`
-                          }
-                        >
-                          {shiftStatusLabel(shift.status)}
-                        </span>
-
-                        <span className="company-arrow">
-                          →
-                        </span>
-                      </div>
-
-                      <h3>{shift.name}</h3>
-
-                      <div className="shift-times">
-                        <div>
-                          <span>Inicio</span>
-                          <strong>
-                            {formatShiftDate(shift.startsAt)}
-                          </strong>
-                        </div>
-
-                        <div>
-                          <span>Fin</span>
-                          <strong>
-                            {formatShiftDate(shift.endsAt)}
-                          </strong>
-                        </div>
-                      </div>
-                    </button>
+                      shift={shift}
+                      onSelect={setSelectedShift}
+                    />
                   ))}
                 </div>
               </section>
