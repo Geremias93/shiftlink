@@ -15,6 +15,7 @@ import { AllClearState } from './components/AllClearState'
 import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
+import { login } from './services/authService'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -1419,24 +1420,7 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(
-          'Correo o contraseña incorrectos',
-        )
-      }
-
-      const data = await response.json()
+      const data = await login(email, password)
 
       localStorage.setItem(
         'shiftlink_access_token',
