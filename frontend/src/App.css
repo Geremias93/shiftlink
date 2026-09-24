@@ -2477,3 +2477,54 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* HANDOVER CARRIED ITEM */
+
+.handover-item-carried {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 5px 9px;
+  border: 1px solid #d8e1f5;
+  border-radius: 999px;
+  background: #f4f7ff;
+  color: #516aa3;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+
+/* HANDOVER CARRY MESSAGE */
+
+.handover-carry-message {
+  margin: 0 0 10px;
+  color: #66728a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* HANDOVER CARRY HELP */
+
+.handover-carry-help {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e0e6f0;
+  border-radius: 10px;
+  background: #f8faff;
+}
+
+.handover-carry-help strong {
+  color: #33415c;
+  font-size: 13px;
+}
+
+.handover-carry-help span {
+  color: #6f7b91;
+  font-size: 12px;
+  line-height: 1.5;
+}

@@ -206,10 +206,15 @@ function App() {
     setHandoverItemPriority,
   ] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
 
+
   const [savingHandoverItem, setSavingHandoverItem] =
     useState(false)
 
+  const [carryingOpenItems, setCarryingOpenItems] =
+    useState(false)
 
+  const [carryItemsMessage, setCarryItemsMessage] =
+    useState('')
 
   const [showHandoverForm, setShowHandoverForm] =
     useState(false)
@@ -1320,6 +1325,96 @@ function App() {
     }
   }
 
+
+  async function handleCarryOpenItems() {
+    if (
+      !token ||
+      !selectedCompany ||
+      !selectedLocation ||
+      !selectedShift
+    ) {
+      return
+    }
+
+    const sourceHandover = [...incomingHandovers]
+      .filter((handover) => handover.status !== 'DRAFT')
+      .sort(
+        (a, b) =>
+          new Date(
+            b.submittedAt ?? b.createdAt,
+          ).getTime() -
+          new Date(
+            a.submittedAt ?? a.createdAt,
+          ).getTime(),
+      )[0]
+
+    if (!sourceHandover) {
+      setCarryItemsMessage(
+        'No hay un relevo anterior con pendientes disponibles.',
+      )
+      return
+    }
+
+    setCarryingOpenItems(true)
+    setCarryItemsMessage('')
+    setError('')
+
+    try {
+      const response = await fetch(
+        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/items/carry-from/${sourceHandover.shiftId}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(
+          'No se han podido arrastrar los pendientes anteriores',
+        )
+      }
+
+      const data: HandoverItem[] = await response.json()
+
+      if (data.length === 0) {
+        setCarryItemsMessage(
+          'No hay pendientes sin resolver del turno anterior.',
+        )
+        return
+      }
+
+      setHandoverItems((current) => {
+        const existingIds = new Set(
+          current.map((item) => item.id),
+        )
+
+        return [
+          ...current,
+          ...data.filter(
+            (item) => !existingIds.has(item.id),
+          ),
+        ]
+      })
+
+      setCarryItemsMessage(
+        data.length === 1
+          ? '1 pendiente del turno anterior añadido a este relevo.'
+          : `${data.length} pendientes del turno anterior añadidos a este relevo.`,
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Ha ocurrido un error',
+      )
+    } finally {
+      setCarryingOpenItems(false)
+    }
+  }
+
+
   async function handleCreateHandoverItem(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -2123,6 +2218,13 @@ function App() {
                                 <p>{item.description}</p>
                               )}
 
+
+                              {item.carriedFromItemId && (
+                                <span className="handover-item-carried">
+                                  Del turno anterior
+                                </span>
+                              )}
+
                               <small>
                                 {item.status === 'OPEN'
                                   ? 'Pendiente'
@@ -2135,7 +2237,28 @@ function App() {
                       {outgoingHandover.status === 'DRAFT' &&
                         canManageOutgoingHandover && (
                         <div className="handover-item-create">
+
+                          {incomingHandovers.length > 0 && (
+                            <div className="handover-carry-help">
+                              <strong>
+                                Pendientes del turno anterior
+                              </strong>
+                              <span>
+                                Si quedó alguna tarea o incidencia
+                                sin resolver, inclúyela en este
+                                relevo para que no se pierda.
+                              </span>
+                            </div>
+                          )}
+
+                          {carryItemsMessage && (
+                            <p className="handover-carry-message">
+                              {carryItemsMessage}
+                            </p>
+                          )}
+
                           {!showHandoverItemForm ? (
+                            <>
                             <button
                               className="shift-secondary-action"
                               type="button"
@@ -2146,6 +2269,21 @@ function App() {
                             >
                               + Añadir pendiente
                             </button>
+
+
+                            {incomingHandovers.length > 0 && (
+                              <button
+                                className="shift-secondary-action"
+                                type="button"
+                                disabled={carryingOpenItems}
+                                onClick={handleCarryOpenItems}
+                              >
+                                {carryingOpenItems
+                                  ? 'Arrastrando...'
+                                  : 'Incluir pendientes sin resolver'}
+                              </button>
+                            )}
+                            </>
                           ) : (
                             <form
                               className="handover-item-form"
@@ -2543,7 +2681,10 @@ function App() {
                         )}
                       </div>
 
-                      {handover.status === 'SUBMITTED' && (
+                      {handover.status === 'SUBMITTED' &&
+                        isCurrentUserAssigned &&
+                        handover.createdByUserId !==
+                          currentMembership?.userId && (
                         <div className="handover-card-actions">
                           <button
                             className="shift-primary-action"
