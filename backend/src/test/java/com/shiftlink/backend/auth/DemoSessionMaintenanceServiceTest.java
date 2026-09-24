@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.shiftlink.backend.company.CompanyRepository;
 import com.shiftlink.backend.membership.MembershipRepository;
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentRepository;
 import com.shiftlink.backend.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +29,9 @@ class DemoSessionMaintenanceServiceTest {
     private MembershipRepository membershipRepository;
 
     @Mock
+    private ShiftAssignmentRepository shiftAssignmentRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @Test
@@ -37,6 +41,7 @@ class DemoSessionMaintenanceServiceTest {
             new DemoSessionMaintenanceService(
                 companyRepository,
                 membershipRepository,
+                shiftAssignmentRepository,
                 userRepository,
                 4,
                 50,

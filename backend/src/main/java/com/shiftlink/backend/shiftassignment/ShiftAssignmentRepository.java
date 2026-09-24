@@ -6,6 +6,9 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ShiftAssignmentRepository
         extends JpaRepository<ShiftAssignment, UUID> {
@@ -38,6 +41,19 @@ public interface ShiftAssignmentRepository
     boolean existsByShift_IdAndMembership_User_IdAndMembership_ActiveTrue(
         UUID shiftId,
         UUID userId
+    );
+
+    @Modifying
+    @Query("""
+        delete from ShiftAssignment sa
+        where sa.membership.id in (
+            select m.id
+            from Membership m
+            where m.company.id = :companyId
+        )
+        """)
+    int deleteByCompanyId(
+        @Param("companyId") UUID companyId
     );
 
 }

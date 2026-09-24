@@ -255,7 +255,7 @@ El esquema se gestiona mediante migraciones versionadas con Flyway.
 
 ## Testing
 
-El backend dispone actualmente de **27 tests automatizados** con JUnit 5, Mockito, AssertJ y Spring Boot Test.
+El backend dispone actualmente de **28 tests automatizados** con JUnit 5, Mockito, AssertJ y Spring Boot Test.
 
 La suite cubre, entre otras áreas:
 

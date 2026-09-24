@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.shiftlink.backend.company.Company;
 import com.shiftlink.backend.company.CompanyRepository;
-import com.shiftlink.backend.membership.Membership;
 import com.shiftlink.backend.membership.MembershipRepository;
+import com.shiftlink.backend.shiftassignment.ShiftAssignmentRepository;
 import com.shiftlink.backend.user.UserAccount;
 import com.shiftlink.backend.user.UserRepository;
 
@@ -27,6 +27,7 @@ public class DemoSessionMaintenanceService {
 
     private final CompanyRepository companyRepository;
     private final MembershipRepository membershipRepository;
+    private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final UserRepository userRepository;
 
     private final long ttlHours;
@@ -40,6 +41,7 @@ public class DemoSessionMaintenanceService {
     public DemoSessionMaintenanceService(
             CompanyRepository companyRepository,
             MembershipRepository membershipRepository,
+            ShiftAssignmentRepository shiftAssignmentRepository,
             UserRepository userRepository,
             @Value("${app.demo.ttl-hours:4}") long ttlHours,
             @Value("${app.demo.max-active-sessions:50}")
@@ -51,6 +53,7 @@ public class DemoSessionMaintenanceService {
 
         this.companyRepository = companyRepository;
         this.membershipRepository = membershipRepository;
+        this.shiftAssignmentRepository = shiftAssignmentRepository;
         this.userRepository = userRepository;
         this.ttlHours = ttlHours;
         this.maxActiveSessions = maxActiveSessions;
@@ -115,9 +118,8 @@ public class DemoSessionMaintenanceService {
 
         List<UserAccount> generatedUsers =
             membershipRepository
-                .findByCompany_Id(company.getId())
+                .findUsersByCompanyId(company.getId())
                 .stream()
-                .map(Membership::getUser)
                 .filter(user ->
                     isGeneratedDemoUser(
                         user.getEmail(),
@@ -125,6 +127,10 @@ public class DemoSessionMaintenanceService {
                     )
                 )
                 .toList();
+
+        shiftAssignmentRepository.deleteByCompanyId(
+            company.getId()
+        );
 
         companyRepository.delete(company);
         companyRepository.flush();

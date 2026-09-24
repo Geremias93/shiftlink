@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.shiftlink.backend.user.UserAccount;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MembershipRepository
         extends JpaRepository<Membership, UUID> {
@@ -16,6 +20,15 @@ public interface MembershipRepository
     List<Membership> findByCompany_IdAndActiveTrue(UUID companyId);
 
     List<Membership> findByCompany_Id(UUID companyId);
+
+    @Query("""
+        select m.user
+        from Membership m
+        where m.company.id = :companyId
+        """)
+    List<UserAccount> findUsersByCompanyId(
+        @Param("companyId") UUID companyId
+    );
 
     @EntityGraph(attributePaths = {"company", "user"})
     Optional<Membership> findByUser_IdAndCompany_IdAndActiveTrue(

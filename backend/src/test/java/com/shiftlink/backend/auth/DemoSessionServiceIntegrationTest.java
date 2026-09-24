@@ -2,12 +2,16 @@ package com.shiftlink.backend.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.shiftlink.backend.company.Company;
@@ -31,6 +35,12 @@ class DemoSessionServiceIntegrationTest {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private DemoSessionMaintenanceService maintenanceService;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void createsIndependentDemoSessions() {
@@ -77,4 +87,80 @@ class DemoSessionServiceIntegrationTest {
         assertThat(firstToken)
             .isNotEqualTo(secondToken);
     }
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void cleansExpiredDemoWithShiftAssignments() {
+
+        UserAccount demoUser =
+            demoSessionService.createDemoSession();
+
+        Company company =
+            companyService
+                .findAllForUser(demoUser.getId())
+                .getFirst();
+
+        String shortId =
+            company.getSlug().substring(
+                "demo-".length(),
+                "demo-".length() + 12
+            );
+
+        int updated = jdbcTemplate.update(
+            "update companies set created_at = ? where id = ?",
+            OffsetDateTime
+                .now(ZoneOffset.UTC)
+                .minusHours(5),
+            company.getId()
+        );
+
+        Long assignmentsBefore = jdbcTemplate.queryForObject(
+            """
+            select count(*)
+            from shift_assignments sa
+            join memberships m
+              on m.id = sa.membership_id
+            where m.company_id = ?
+            """,
+            Long.class,
+            company.getId()
+        );
+
+        Long generatedUsersBefore = jdbcTemplate.queryForObject(
+            """
+            select count(*)
+            from users
+            where email like ?
+            """,
+            Long.class,
+            "%-" + shortId + "@shiftlink.dev"
+        );
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(assignmentsBefore).isPositive();
+        assertThat(generatedUsersBefore).isEqualTo(3L);
+
+        assertThat(
+            maintenanceService.reserveCreationSlot()
+        ).isTrue();
+
+        Long companyCount = jdbcTemplate.queryForObject(
+            "select count(*) from companies where id = ?",
+            Long.class,
+            company.getId()
+        );
+
+        Long generatedUsersAfter = jdbcTemplate.queryForObject(
+            """
+            select count(*)
+            from users
+            where email like ?
+            """,
+            Long.class,
+            "%-" + shortId + "@shiftlink.dev"
+        );
+
+        assertThat(companyCount).isZero();
+        assertThat(generatedUsersAfter).isZero();
+    }
+
 }
