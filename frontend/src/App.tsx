@@ -14,6 +14,7 @@ import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
 import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
+import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -1840,45 +1841,10 @@ function App() {
                       ) : (
                         <div className="handover-items-list">
                           {handoverItems.map((item) => (
-                            <article
-                              className="handover-item-card"
+                            <OutgoingHandoverItemCard
                               key={item.id}
-                            >
-                              <div className="handover-item-top">
-                                <span>
-                                  {item.type === 'TASK'
-                                    ? 'Tarea'
-                                    : 'Incidencia'}
-                                </span>
-
-                                <span>
-                                  {item.priority === 'HIGH'
-                                    ? 'Prioridad alta'
-                                    : item.priority === 'LOW'
-                                      ? 'Prioridad baja'
-                                      : 'Prioridad media'}
-                                </span>
-                              </div>
-
-                              <strong>{item.title}</strong>
-
-                              {item.description && (
-                                <p>{item.description}</p>
-                              )}
-
-
-                              {item.carriedFromItemId && (
-                                <span className="handover-item-carried">
-                                  Del turno anterior
-                                </span>
-                              )}
-
-                              <small>
-                                {item.status === 'OPEN'
-                                  ? 'Pendiente'
-                                  : 'Resuelto'}
-                              </small>
-                            </article>
+                              item={item}
+                            />
                           ))}
                         </div>
                       )}
