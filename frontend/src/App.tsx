@@ -6,6 +6,7 @@ import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
+import { AllClearState } from './components/AllClearState'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -2685,16 +2686,10 @@ function App() {
                     onSelect={setSelectedShift}
                   />
                 ) : (
-                  <div className="all-clear">
-                    <div className="all-clear-icon">✓</div>
-
-                    <div>
-                      <strong>No hay ningún turno en curso</strong>
-                      <p>
-                        El siguiente turno aparecerá más abajo.
-                      </p>
-                    </div>
-                  </div>
+                  <AllClearState
+                    title="No hay ningún turno en curso"
+                    description="El siguiente turno aparecerá más abajo."
+                  />
                 )}
               </section>
 
@@ -2714,16 +2709,10 @@ function App() {
                 </div>
 
                 {openItems.length === 0 ? (
-                  <div className="all-clear">
-                    <div className="all-clear-icon">✓</div>
-
-                    <div>
-                      <strong>Todo al día</strong>
-                      <p>
-                        No hay tareas ni incidencias pendientes.
-                      </p>
-                    </div>
-                  </div>
+                  <AllClearState
+                    title="Todo al día"
+                    description="No hay tareas ni incidencias pendientes."
+                  />
                 ) : (
                   <div className="pending-list">
                     {openItems.map((item) => (
@@ -2790,17 +2779,10 @@ function App() {
                     onSelect={setSelectedShift}
                   />
                 ) : (
-                  <div className="all-clear">
-                    <div className="all-clear-icon">✓</div>
-
-                    <div>
-                      <strong>No hay más turnos programados</strong>
-                      <p>
-                        No hay un siguiente turno pendiente
-                        de comenzar.
-                      </p>
-                    </div>
-                  </div>
+                  <AllClearState
+                    title="No hay más turnos programados"
+                    description="No hay un siguiente turno pendiente de comenzar."
+                  />
                 )}
               </section>
 
