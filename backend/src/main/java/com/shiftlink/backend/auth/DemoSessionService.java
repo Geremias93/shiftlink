@@ -101,8 +101,8 @@ public class DemoSessionService {
             new RegisterRequest(
                 "empleado-" + shortId + "@shiftlink.dev",
                 randomPassword(),
-                "Empleado",
-                "Prueba"
+                "Daniel",
+                "Ruiz"
             )
         );
 

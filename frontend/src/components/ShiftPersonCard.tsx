@@ -14,6 +14,11 @@ export function ShiftPersonCard({
   removing,
   onRemove,
 }: ShiftPersonCardProps) {
+  const isDemoTechnicalEmail =
+    /^(demo|empleado|laura)-[a-f0-9]{12}@shiftlink\.dev$/i.test(
+      assignment.email,
+    )
+
   return (
     <article className="shift-person-card">
       <span className="shift-person-avatar">
@@ -25,7 +30,9 @@ export function ShiftPersonCard({
           {assignment.firstName} {assignment.lastName}
         </strong>
 
-        <span>{assignment.email}</span>
+        {!isDemoTechnicalEmail && (
+          <span>{assignment.email}</span>
+        )}
 
         <small>{roleLabels[assignment.role]}</small>
       </div>
