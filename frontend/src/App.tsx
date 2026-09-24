@@ -1894,6 +1894,7 @@ function App() {
                         handover.createdByUserId !==
                           currentMembership?.userId
                       }
+                      canResolve={isCurrentUserAssigned}
                       acknowledging={
                         acknowledgingHandoverId === handover.id
                       }

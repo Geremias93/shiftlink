@@ -6,12 +6,14 @@ import {
 
 type IncomingHandoverItemCardProps = {
   item: HandoverItem
+  canResolve: boolean
   resolving: boolean
   onResolve: (item: HandoverItem) => void
 }
 
 export function IncomingHandoverItemCard({
   item,
+  canResolve,
   resolving,
   onResolve,
 }: IncomingHandoverItemCardProps) {
@@ -37,7 +39,7 @@ export function IncomingHandoverItemCard({
           : 'Resuelto'}
       </small>
 
-      {item.status === 'OPEN' && (
+      {canResolve && item.status === 'OPEN' && (
         <button
           className="shift-secondary-action"
           type="button"

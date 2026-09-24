@@ -10,6 +10,7 @@ type IncomingHandoverCardProps = {
   originShiftName: string
   items: HandoverItem[]
   canAcknowledge: boolean
+  canResolve: boolean
   acknowledging: boolean
   resolvingItemId: string | null
   onResolve: (
@@ -24,6 +25,7 @@ export function IncomingHandoverCard({
   originShiftName,
   items,
   canAcknowledge,
+  canResolve,
   acknowledging,
   resolvingItemId,
   onResolve,
@@ -65,6 +67,7 @@ export function IncomingHandoverCard({
               <IncomingHandoverItemCard
                 key={item.id}
                 item={item}
+                canResolve={canResolve}
                 resolving={resolvingItemId === item.id}
                 onResolve={(itemToResolve) =>
                   onResolve(handover, itemToResolve)
