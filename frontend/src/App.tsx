@@ -13,6 +13,7 @@ import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
 import { PendingItemCard } from './components/PendingItemCard'
+import { IncomingHandoverItemCard } from './components/IncomingHandoverItemCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -2264,60 +2265,19 @@ function App() {
                                 handover.id
                               ] ?? []
                             ).map((item) => (
-                              <article
-                                className="handover-item-card"
+                              <IncomingHandoverItemCard
                                 key={item.id}
-                              >
-                                <div className="handover-item-top">
-                                  <span>
-                                    {item.type === 'TASK'
-                                      ? 'Tarea'
-                                      : 'Incidencia'}
-                                  </span>
-
-                                  <span>
-                                    {item.priority === 'HIGH'
-                                      ? 'Prioridad alta'
-                                      : item.priority === 'LOW'
-                                        ? 'Prioridad baja'
-                                        : 'Prioridad media'}
-                                  </span>
-                                </div>
-
-                                <strong>{item.title}</strong>
-
-                                {item.description && (
-                                  <p>{item.description}</p>
-                                )}
-
-                                <small>
-                                  {item.status === 'OPEN'
-                                    ? 'Pendiente'
-                                    : 'Resuelto'}
-                                </small>
-
-                                {item.status === 'OPEN' && (
-                                  <button
-                                    className="shift-secondary-action"
-                                    type="button"
-                                    disabled={
-                                      resolvingHandoverItemId ===
-                                      item.id
-                                    }
-                                    onClick={() =>
-                                      handleResolveIncomingItem(
-                                        handover,
-                                        item,
-                                      )
-                                    }
-                                  >
-                                    {resolvingHandoverItemId ===
-                                    item.id
-                                      ? 'Resolviendo...'
-                                      : 'Marcar como resuelto'}
-                                  </button>
-                                )}
-                              </article>
+                                item={item}
+                                resolving={
+                                  resolvingHandoverItemId === item.id
+                                }
+                                onResolve={(itemToResolve) =>
+                                  handleResolveIncomingItem(
+                                    handover,
+                                    itemToResolve,
+                                  )
+                                }
+                              />
                             ))}
                           </div>
                         )}
