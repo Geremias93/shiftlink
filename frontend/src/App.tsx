@@ -18,6 +18,7 @@ import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
 import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
 import { getLocationActivity } from './services/locationService'
+import { getShiftDetail } from './services/shiftService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -356,6 +357,7 @@ function App() {
     const companyId = selectedCompany.id
     const locationId = selectedLocation.id
     const shiftId = selectedShift.id
+    const accessToken = token
 
     async function loadShiftDetail() {
       setLoadingShiftDetail(true)
@@ -366,94 +368,21 @@ function App() {
       setIncomingHandovers([])
       setIncomingHandoverItems({})
 
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      }
-
-      const baseUrl =
-        `/api/companies/${companyId}/locations/${locationId}/shifts/${shiftId}`
-
       try {
-        const [
-          assignmentsResponse,
-          outgoingResponse,
-          incomingResponse,
-        ] = await Promise.all([
-          fetch(`${baseUrl}/assignments`, { headers }),
-          fetch(`${baseUrl}/handover`, { headers }),
-          fetch(`${baseUrl}/incoming-handovers`, { headers }),
-        ])
-
-        if (
-          !assignmentsResponse.ok ||
-          !incomingResponse.ok ||
-          (
-            !outgoingResponse.ok &&
-            outgoingResponse.status !== 404
-          )
-        ) {
-          throw new Error(
-            'No se ha podido cargar el detalle del turno',
-          )
-        }
-
-        const assignmentsData: ShiftAssignment[] =
-          await assignmentsResponse.json()
-
-        const incomingData: Handover[] =
-          await incomingResponse.json()
-
-
-        const incomingItemsEntries = await Promise.all(
-          incomingData.map(async (handover) => {
-            const itemsResponse = await fetch(
-              `/api/companies/${companyId}/locations/${locationId}/shifts/${handover.shiftId}/handover/items`,
-              { headers },
-            )
-
-            if (!itemsResponse.ok) {
-              throw new Error(
-                'No se han podido cargar los pendientes recibidos',
-              )
-            }
-
-            const items: HandoverItem[] =
-              await itemsResponse.json()
-
-            return [handover.id, items] as const
-          }),
+        const detail = await getShiftDetail(
+          companyId,
+          locationId,
+          shiftId,
+          accessToken,
         )
 
-        const incomingItemsData =
-          Object.fromEntries(incomingItemsEntries)
-
-        let outgoingData: Handover | null = null
-        let handoverItemsData: HandoverItem[] = []
-
-        if (outgoingResponse.ok) {
-          outgoingData =
-            await outgoingResponse.json()
-
-          const itemsResponse = await fetch(
-            `${baseUrl}/handover/items`,
-            { headers },
-          )
-
-          if (!itemsResponse.ok) {
-            throw new Error(
-              'No se han podido cargar los pendientes del relevo',
-            )
-          }
-
-          handoverItemsData =
-            await itemsResponse.json()
-        }
-
-        setAssignments(assignmentsData)
-        setOutgoingHandover(outgoingData)
-        setIncomingHandovers(incomingData)
-        setIncomingHandoverItems(incomingItemsData)
-        setHandoverItems(handoverItemsData)
+        setAssignments(detail.assignments)
+        setOutgoingHandover(detail.outgoingHandover)
+        setIncomingHandovers(detail.incomingHandovers)
+        setIncomingHandoverItems(
+          detail.incomingHandoverItems,
+        )
+        setHandoverItems(detail.handoverItems)
       } catch (err) {
         setError(
           err instanceof Error
