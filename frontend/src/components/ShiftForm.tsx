@@ -1,10 +1,16 @@
 import type { FormEventHandler } from 'react'
 
-type CreateShiftFormProps = {
+type ShiftFormProps = {
+  title: string
+  description: string
   name: string
   startsAt: string
   endsAt: string
   saving: boolean
+  submitLabel: string
+  savingLabel: string
+  namePlaceholder?: string
+  className?: string
   onNameChange: (value: string) => void
   onStartsAtChange: (value: string) => void
   onEndsAtChange: (value: string) => void
@@ -12,27 +18,35 @@ type CreateShiftFormProps = {
   onSubmit: FormEventHandler<HTMLFormElement>
 }
 
-export function CreateShiftForm({
+export function ShiftForm({
+  title,
+  description,
   name,
   startsAt,
   endsAt,
   saving,
+  submitLabel,
+  savingLabel,
+  namePlaceholder,
+  className,
   onNameChange,
   onStartsAtChange,
   onEndsAtChange,
   onCancel,
   onSubmit,
-}: CreateShiftFormProps) {
+}: ShiftFormProps) {
   return (
     <form
-      className="shift-create-form"
+      className={
+        className
+          ? `shift-create-form ${className}`
+          : 'shift-create-form'
+      }
       onSubmit={onSubmit}
     >
       <div className="handover-form-heading">
-        <strong>Nuevo turno</strong>
-        <span>
-          Define el nombre y el horario del turno.
-        </span>
+        <strong>{title}</strong>
+        <span>{description}</span>
       </div>
 
       <label className="handover-field">
@@ -45,7 +59,7 @@ export function CreateShiftForm({
           onChange={(event) =>
             onNameChange(event.target.value)
           }
-          placeholder="Ej.: Turno de mañana"
+          placeholder={namePlaceholder}
         />
       </label>
 
@@ -94,7 +108,7 @@ export function CreateShiftForm({
             !endsAt
           }
         >
-          {saving ? 'Creando...' : 'Crear turno'}
+          {saving ? savingLabel : submitLabel}
         </button>
       </div>
     </form>

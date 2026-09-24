@@ -4,7 +4,7 @@ import { WorkspaceNav } from './components/WorkspaceNav'
 import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
-import { CreateShiftForm } from './components/CreateShiftForm'
+import { ShiftForm } from './components/ShiftForm'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
@@ -1600,88 +1600,24 @@ function App() {
             currentMembership?.role === 'OWNER' ||
             currentMembership?.role === 'MANAGER'
           ) && (
-            <form
-              className="shift-create-form shift-edit-form"
+            <ShiftForm
+              title="Editar turno"
+              description="Modifica el nombre o el horario antes de iniciar el turno."
+              name={editShiftName}
+              startsAt={editShiftStartsAt}
+              endsAt={editShiftEndsAt}
+              saving={savingShiftEdit}
+              submitLabel="Guardar cambios"
+              savingLabel="Guardando..."
+              className="shift-edit-form"
+              onNameChange={setEditShiftName}
+              onStartsAtChange={setEditShiftStartsAt}
+              onEndsAtChange={setEditShiftEndsAt}
               onSubmit={handleUpdateShift}
-            >
-              <div className="handover-form-heading">
-                <strong>Editar turno</strong>
-                <span>
-                  Modifica el nombre o el horario antes de
-                  iniciar el turno.
-                </span>
-              </div>
-
-              <label className="handover-field">
-                <span>Nombre</span>
-
-                <input
-                  type="text"
-                  maxLength={120}
-                  value={editShiftName}
-                  onChange={(event) =>
-                    setEditShiftName(event.target.value)
-                  }
-                />
-              </label>
-
-              <div className="handover-item-form-row">
-                <label className="handover-field">
-                  <span>Inicio</span>
-
-                  <input
-                    type="datetime-local"
-                    value={editShiftStartsAt}
-                    onChange={(event) =>
-                      setEditShiftStartsAt(
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-
-                <label className="handover-field">
-                  <span>Fin</span>
-
-                  <input
-                    type="datetime-local"
-                    value={editShiftEndsAt}
-                    onChange={(event) =>
-                      setEditShiftEndsAt(
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-              </div>
-
-              <div className="handover-form-actions">
-                <button
-                  className="shift-secondary-action"
-                  type="button"
-                  onClick={() =>
-                    setShowEditShiftForm(false)
-                  }
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  className="shift-primary-action"
-                  type="submit"
-                  disabled={
-                    savingShiftEdit ||
-                    !editShiftName.trim() ||
-                    !editShiftStartsAt ||
-                    !editShiftEndsAt
-                  }
-                >
-                  {savingShiftEdit
-                    ? 'Guardando...'
-                    : 'Guardar cambios'}
-                </button>
-              </div>
-            </form>
+              onCancel={() =>
+                setShowEditShiftForm(false)
+              }
+            />
           )}
 
         {error && (
@@ -2788,11 +2724,16 @@ function App() {
 
 
                 {showCreateShiftForm && (
-                  <CreateShiftForm
+                  <ShiftForm
+                    title="Nuevo turno"
+                    description="Define el nombre y el horario del turno."
                     name={newShiftName}
                     startsAt={newShiftStartsAt}
                     endsAt={newShiftEndsAt}
                     saving={savingShift}
+                    submitLabel="Crear turno"
+                    savingLabel="Creando..."
+                    namePlaceholder="Ej.: Turno de mañana"
                     onNameChange={setNewShiftName}
                     onStartsAtChange={setNewShiftStartsAt}
                     onEndsAtChange={setNewShiftEndsAt}
