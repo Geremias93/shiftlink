@@ -5,6 +5,7 @@ import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
 import { ShiftForm } from './components/ShiftForm'
+import { ShiftPersonCard } from './components/ShiftPersonCard'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
@@ -1750,53 +1751,19 @@ function App() {
                 ) : (
                   <div className="shift-people-list">
                     {assignments.map((assignment) => (
-                      <article
-                        className="shift-person-card"
+                      <ShiftPersonCard
                         key={assignment.assignmentId}
-                      >
-                        <span className="shift-person-avatar">
-                          {assignment.firstName
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-
-                        <div className="shift-person-info">
-                          <strong>
-                            {assignment.firstName}{' '}
-                            {assignment.lastName}
-                          </strong>
-
-                          <span>{assignment.email}</span>
-
-                          <small>
-                            {roleLabels[assignment.role]}
-                          </small>
-                        </div>
-
-                        {(
+                        assignment={assignment}
+                        canManage={
                           currentMembership?.role === 'OWNER' ||
                           currentMembership?.role === 'MANAGER'
-                        ) && (
-                          <button
-                            className="shift-person-remove"
-                            type="button"
-                            disabled={
-                              removingAssignmentId ===
-                              assignment.assignmentId
-                            }
-                            onClick={() =>
-                              handleRemoveAssignment(
-                                assignment,
-                              )
-                            }
-                          >
-                            {removingAssignmentId ===
-                            assignment.assignmentId
-                              ? 'Quitando...'
-                              : 'Quitar del turno'}
-                          </button>
-                        )}
-                      </article>
+                        }
+                        removing={
+                          removingAssignmentId ===
+                          assignment.assignmentId
+                        }
+                        onRemove={handleRemoveAssignment}
+                      />
                     ))}
                   </div>
                 )}
