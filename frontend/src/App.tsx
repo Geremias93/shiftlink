@@ -16,6 +16,8 @@ import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
+import { getCompanies } from './services/companyService'
+import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -194,32 +196,23 @@ function App() {
       return
     }
 
+    const accessToken = token
+
     async function loadCompanies() {
       setLoadingCompanies(true)
       setError('')
 
       try {
-        const response = await fetch('/api/companies', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const data = await getCompanies(accessToken)
 
-        if (response.status === 401) {
+        setCompanies(data)
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
           localStorage.removeItem('shiftlink_access_token')
           setToken(null)
           return
         }
 
-        if (!response.ok) {
-          throw new Error(
-            'No se han podido cargar tus empresas',
-          )
-        }
-
-        const data: Company[] = await response.json()
-        setCompanies(data)
-      } catch (err) {
         setError(
           err instanceof Error
             ? err.message
