@@ -19,6 +19,10 @@ import { login } from './services/authService'
 import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
 import { getLocationActivity } from './services/locationService'
 import {
+  cancelShift,
+  completeShift,
+  startShift,
+  updateShift,
   removeShiftAssignment,
   assignMemberToShift,
   createShift,
@@ -881,29 +885,17 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}`,
+      const data = await updateShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
         {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: editShiftName.trim(),
-            startsAt: startsAt.toISOString(),
-            endsAt: endsAt.toISOString(),
-          }),
+          name: editShiftName.trim(),
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
         },
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido actualizar el turno',
-        )
-      }
-
-      const data: Shift = await response.json()
 
       setSelectedShift(data)
 
@@ -946,23 +938,12 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/start`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await startShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido iniciar el turno',
-        )
-      }
-
-      const data: Shift = await response.json()
 
       setSelectedShift(data)
 
@@ -996,23 +977,12 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/complete`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await completeShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido completar el turno',
-        )
-      }
-
-      const data: Shift = await response.json()
 
       setSelectedShift(data)
 
@@ -1054,23 +1024,12 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/cancel`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await cancelShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido cancelar el turno',
-        )
-      }
-
-      const data: Shift = await response.json()
 
       setSelectedShift(data)
 

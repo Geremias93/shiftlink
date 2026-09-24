@@ -141,3 +141,87 @@ export function removeShiftAssignment(
     },
   )
 }
+
+export function updateShift(
+  companyId: string,
+  locationId: string,
+  shiftId: string,
+  token: string,
+  input: ShiftInput,
+): Promise<Shift> {
+  return apiRequest<Shift>(
+    `/api/companies/${companyId}/locations/${locationId}/shifts/${shiftId}`,
+    token,
+    'No se ha podido actualizar el turno',
+    {
+      method: 'PATCH',
+      body: input,
+    },
+  )
+}
+
+function changeShiftStatus(
+  companyId: string,
+  locationId: string,
+  shiftId: string,
+  token: string,
+  action: 'start' | 'complete' | 'cancel',
+  errorMessage: string,
+): Promise<Shift> {
+  return apiRequest<Shift>(
+    `/api/companies/${companyId}/locations/${locationId}/shifts/${shiftId}/${action}`,
+    token,
+    errorMessage,
+    {
+      method: 'POST',
+    },
+  )
+}
+
+export function startShift(
+  companyId: string,
+  locationId: string,
+  shiftId: string,
+  token: string,
+): Promise<Shift> {
+  return changeShiftStatus(
+    companyId,
+    locationId,
+    shiftId,
+    token,
+    'start',
+    'No se ha podido iniciar el turno',
+  )
+}
+
+export function completeShift(
+  companyId: string,
+  locationId: string,
+  shiftId: string,
+  token: string,
+): Promise<Shift> {
+  return changeShiftStatus(
+    companyId,
+    locationId,
+    shiftId,
+    token,
+    'complete',
+    'No se ha podido completar el turno',
+  )
+}
+
+export function cancelShift(
+  companyId: string,
+  locationId: string,
+  shiftId: string,
+  token: string,
+): Promise<Shift> {
+  return changeShiftStatus(
+    companyId,
+    locationId,
+    shiftId,
+    token,
+    'cancel',
+    'No se ha podido cancelar el turno',
+  )
+}
