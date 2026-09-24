@@ -4,11 +4,12 @@ import { WorkspaceNav } from './components/WorkspaceNav'
 import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
+import { CurrentShiftCard } from './components/CurrentShiftCard'
+import { NextShiftCard } from './components/NextShiftCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
   formatDetailDate,
-  formatShiftDate,
   handoverStatusLabel,
   itemTypeLabel,
   priorityLabel,
@@ -2679,39 +2680,10 @@ function App() {
                 </div>
 
                 {activeShift ? (
-                  <button
-                    className="current-shift-card"
-                    type="button"
-                    onClick={() =>
-                      setSelectedShift(activeShift)
-                    }
-                  >
-                    <div className="current-shift-card-top">
-                      <span className="shift-status shift-status-active">
-                        En curso
-                      </span>
-
-                      <span className="current-shift-arrow">
-                        →
-                      </span>
-                    </div>
-
-                    <div className="current-shift-main">
-                      <div>
-                        <h3>{activeShift.name}</h3>
-
-                        <p className="current-shift-time">
-                          {formatShiftDate(
-                            activeShift.startsAt,
-                          )}
-                          {' → '}
-                          {formatShiftDate(
-                            activeShift.endsAt,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
+                  <CurrentShiftCard
+                    shift={activeShift}
+                    onSelect={setSelectedShift}
+                  />
                 ) : (
                   <div className="all-clear">
                     <div className="all-clear-icon">✓</div>
@@ -2813,31 +2785,10 @@ function App() {
                 </div>
 
                 {nextShift ? (
-                  <button
-                    className="next-shift-card"
-                    type="button"
-                    onClick={() =>
-                      setSelectedShift(nextShift)
-                    }
-                  >
-                    <div>
-                      <span className="shift-status shift-status-scheduled">
-                        Próximo
-                      </span>
-
-                      <h3>{nextShift.name}</h3>
-
-                      <p>
-                        {formatShiftDate(nextShift.startsAt)}
-                        {' → '}
-                        {formatShiftDate(nextShift.endsAt)}
-                      </p>
-                    </div>
-
-                    <span className="company-arrow">
-                      →
-                    </span>
-                  </button>
+                  <NextShiftCard
+                    shift={nextShift}
+                    onSelect={setSelectedShift}
+                  />
                 ) : (
                   <div className="all-clear">
                     <div className="all-clear-icon">✓</div>
