@@ -56,3 +56,66 @@ export async function apiGetOptional<T>(
 
   return response.json()
 }
+
+type ApiRequestOptions = {
+  method: 'POST' | 'PATCH' | 'DELETE'
+  body?: unknown
+}
+
+export async function apiRequest<T>(
+  url: string,
+  token: string,
+  errorMessage: string,
+  options: ApiRequestOptions,
+): Promise<T> {
+  const response = await fetch(url, {
+    method: options.method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body !== undefined
+        ? { 'Content-Type': 'application/json' }
+        : {}),
+    },
+    body:
+      options.body !== undefined
+        ? JSON.stringify(options.body)
+        : undefined,
+  })
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      errorMessage,
+    )
+  }
+
+  return response.json()
+}
+
+export async function apiRequestVoid(
+  url: string,
+  token: string,
+  errorMessage: string,
+  options: ApiRequestOptions,
+): Promise<void> {
+  const response = await fetch(url, {
+    method: options.method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body !== undefined
+        ? { 'Content-Type': 'application/json' }
+        : {}),
+    },
+    body:
+      options.body !== undefined
+        ? JSON.stringify(options.body)
+        : undefined,
+  })
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      errorMessage,
+    )
+  }
+}

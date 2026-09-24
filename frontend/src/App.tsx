@@ -18,7 +18,12 @@ import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
 import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
 import { getLocationActivity } from './services/locationService'
-import { getShiftDetail } from './services/shiftService'
+import {
+  removeShiftAssignment,
+  assignMemberToShift,
+  createShift,
+  getShiftDetail,
+} from './services/shiftService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -434,29 +439,16 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts`,
+      const data = await createShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        token,
         {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: newShiftName.trim(),
-            startsAt: startsAt.toISOString(),
-            endsAt: endsAt.toISOString(),
-          }),
+          name: newShiftName.trim(),
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
         },
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido crear el turno',
-        )
-      }
-
-      const data: Shift = await response.json()
 
       setShifts((current) =>
         [...current, data].sort(
@@ -501,28 +493,13 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/assignments`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            membershipId: assignmentMembershipId,
-          }),
-        },
+      const data = await assignMemberToShift(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
+        assignmentMembershipId,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido asignar el empleado',
-        )
-      }
-
-      const data: ShiftAssignment =
-        await response.json()
 
       setAssignments((current) => [
         ...current,
@@ -560,21 +537,13 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/assignments/${assignment.assignmentId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      await removeShiftAssignment(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        assignment.assignmentId,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido quitar al empleado del turno',
-        )
-      }
 
       setAssignments((current) =>
         current.filter(
