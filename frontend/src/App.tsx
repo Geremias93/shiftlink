@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { WorkspaceNav } from './components/WorkspaceNav'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -2620,26 +2621,11 @@ function App() {
 
     return (
       <div className="location-page">
-        <nav className="workspace-nav">
-          <div className="workspace-brand">
-            <div className="workspace-logo">S</div>
-
-            <div>
-              <strong>ShiftLink</strong>
-              <span>
-                {selectedCompany.name} · {selectedLocation.name}
-              </span>
-            </div>
-          </div>
-
-          <button
-            className="logout-button"
-            type="button"
-            onClick={() => setSelectedLocation(null)}
-          >
-            ← Volver al local
-          </button>
-        </nav>
+        <WorkspaceNav
+          subtitle={`${selectedCompany.name} · ${selectedLocation.name}`}
+          actionLabel="← Volver al local"
+          onAction={() => setSelectedLocation(null)}
+        />
 
         <main className="location-dashboard">
           <section className="location-hero">
@@ -3049,24 +3035,11 @@ function App() {
   if (token && selectedCompany) {
     return (
       <div className="company-page">
-        <nav className="workspace-nav">
-          <div className="workspace-brand">
-            <div className="workspace-logo">S</div>
-
-            <div>
-              <strong>ShiftLink</strong>
-              <span>{selectedCompany.name}</span>
-            </div>
-          </div>
-
-          <button
-            className="logout-button"
-            type="button"
-            onClick={() => setSelectedCompany(null)}
-          >
-            ← Cambiar empresa
-          </button>
-        </nav>
+        <WorkspaceNav
+          subtitle={selectedCompany.name}
+          actionLabel="← Cambiar empresa"
+          onAction={() => setSelectedCompany(null)}
+        />
 
         <main className="company-dashboard">
           <section className="company-dashboard-hero">
@@ -3160,24 +3133,11 @@ function App() {
   if (token) {
     return (
       <div className="workspace-page">
-        <nav className="workspace-nav">
-          <div className="workspace-brand">
-            <div className="workspace-logo">S</div>
-
-            <div>
-              <strong>ShiftLink</strong>
-              <span>Gestión de relevos</span>
-            </div>
-          </div>
-
-          <button
-            className="logout-button"
-            type="button"
-            onClick={handleLogout}
-          >
-            Cerrar sesión
-          </button>
-        </nav>
+        <WorkspaceNav
+          subtitle="Gestión de relevos"
+          actionLabel="Cerrar sesión"
+          onAction={handleLogout}
+        />
 
         <main className="workspace-content">
           <section className="workspace-hero">
