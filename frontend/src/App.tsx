@@ -7,13 +7,12 @@ import { ShiftCard } from './components/ShiftCard'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
+import { PendingItemCard } from './components/PendingItemCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
   formatDetailDate,
   handoverStatusLabel,
-  itemTypeLabel,
-  priorityLabel,
   roleLabels,
   shiftStatusLabels,
 } from './utils/formatters'
@@ -2716,46 +2715,10 @@ function App() {
                 ) : (
                   <div className="pending-list">
                     {openItems.map((item) => (
-                      <article
-                        className="pending-card"
+                      <PendingItemCard
                         key={item.id}
-                      >
-                        <div className="pending-main">
-                          <div className="pending-icon">
-                            {item.type === 'INCIDENT'
-                              ? '!'
-                              : '✓'}
-                          </div>
-
-                          <div>
-                            <div className="pending-tags">
-                              <span>
-                                {itemTypeLabel(item.type)}
-                              </span>
-
-                              <span
-                                className={
-                                  `priority-tag ` +
-                                  `priority-${item.priority.toLowerCase()}`
-                                }
-                              >
-                                Prioridad{' '}
-                                {priorityLabel(item.priority)}
-                              </span>
-                            </div>
-
-                            <h3>{item.title}</h3>
-
-                            {item.description && (
-                              <p>{item.description}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <span className="company-arrow">
-                          →
-                        </span>
-                      </article>
+                        item={item}
+                      />
                     ))}
                   </div>
                 )}
