@@ -32,7 +32,7 @@ jobs:
       POSTGRES_DB: shiftlink
       POSTGRES_USER: shiftlink
       POSTGRES_PASSWORD: shiftlink_ci_password
-      JWT_SECRET: shiftlink_ci_secret_for_automated_tests_2026
+      JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
     steps:
       - name: Checkout
