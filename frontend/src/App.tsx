@@ -6,6 +6,7 @@ import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
 import { ShiftForm } from './components/ShiftForm'
 import { ShiftPersonCard } from './components/ShiftPersonCard'
+import { AssignMemberForm } from './components/AssignMemberForm'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
@@ -15,7 +16,6 @@ import { toDatetimeLocalValue } from './utils/date'
 import {
   formatDetailDate,
   handoverStatusLabel,
-  roleLabels,
   shiftStatusLabels,
 } from './utils/formatters'
 
@@ -1666,74 +1666,18 @@ function App() {
                         + Asignar empleado
                       </button>
                     ) : (
-                      <form
-                        className="shift-assignment-form"
+                      <AssignMemberForm
+                        members={companyMembers}
+                        assignments={assignments}
+                        membershipId={assignmentMembershipId}
+                        saving={savingAssignment}
+                        onMembershipIdChange={setAssignmentMembershipId}
                         onSubmit={handleAssignMember}
-                      >
-                        <label className="handover-field">
-                          <span>Empleado</span>
-
-                          <select
-                            value={assignmentMembershipId}
-                            onChange={(event) =>
-                              setAssignmentMembershipId(
-                                event.target.value,
-                              )
-                            }
-                          >
-                            <option value="">
-                              Selecciona un empleado
-                            </option>
-
-                            {companyMembers
-                              .filter(
-                                (member) =>
-                                  member.active &&
-                                  !assignments.some(
-                                    (assignment) =>
-                                      assignment.membershipId ===
-                                      member.membershipId,
-                                  ),
-                              )
-                              .map((member) => (
-                                <option
-                                  key={member.membershipId}
-                                  value={member.membershipId}
-                                >
-                                  {member.firstName}{' '}
-                                  {member.lastName} ·{' '}
-                                  {roleLabels[member.role]}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
-
-                        <div className="handover-form-actions">
-                          <button
-                            className="shift-secondary-action"
-                            type="button"
-                            onClick={() => {
-                              setShowAssignmentForm(false)
-                              setAssignmentMembershipId('')
-                            }}
-                          >
-                            Cancelar
-                          </button>
-
-                          <button
-                            className="shift-primary-action"
-                            type="submit"
-                            disabled={
-                              !assignmentMembershipId ||
-                              savingAssignment
-                            }
-                          >
-                            {savingAssignment
-                              ? 'Asignando...'
-                              : 'Asignar'}
-                          </button>
-                        </div>
-                      </form>
+                        onCancel={() => {
+                          setShowAssignmentForm(false)
+                          setAssignmentMembershipId('')
+                        }}
+                      />
                     )}
                   </div>
                 )}
