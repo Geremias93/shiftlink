@@ -1,87 +1,145 @@
 # ShiftLink
 
-ShiftLink es una plataforma SaaS B2B para gestionar la comunicación y el traspaso de información entre turnos de trabajo.
+ShiftLink es una plataforma Full Stack para gestionar relevos de turno y mantener la continuidad operativa entre equipos.
 
-El objetivo del proyecto es evitar que incidencias, tareas pendientes y otra información importante se pierdan cuando un equipo termina su turno y comienza el siguiente.
+Centraliza incidencias, tareas pendientes, contexto operativo y confirmaciones de recepción para evitar que la información importante se pierda cuando termina un turno y comienza el siguiente.
 
-La aplicación permite organizar empresas y locales, gestionar turnos y empleados, crear relevos estructurados, confirmar su recepción y mantener la continuidad de los asuntos que siguen pendientes.
+## Demo pública
 
-## Problema que resuelve
+Prueba la aplicación sin registrarte:
 
-En muchos negocios, los cambios de turno todavía dependen de herramientas poco estructuradas:
+<a href="https://shiftlink-tldu.onrender.com">Abrir demo pública</a>
 
-- Mensajes de WhatsApp
-- Notas en papel
-- Comunicación verbal
-- Grupos informales
-- Mensajes dispersos entre empleados
+Pulsa **Entrar en demo**.
 
-Esto puede provocar pérdida de información, tareas olvidadas y falta de trazabilidad.
+Cada visitante recibe un entorno de demostración independiente con empresa, local, turnos, empleados, relevos, incidencias y tareas de ejemplo. Los cambios realizados en una demo no afectan a otros visitantes.
 
-ShiftLink centraliza ese proceso en una aplicación donde cada relevo queda asociado a un turno, un local y una empresa.
+> El backend está desplegado en el plan gratuito de Render, por lo que la primera petición puede tardar unos segundos si el servicio estaba inactivo.
 
-## Funcionalidades principales
+## Vista del producto
 
-Actualmente ShiftLink incluye:
+### Actividad del local
 
-- Registro e inicio de sesión de usuarios
-- Autenticación stateless mediante JWT
-- Contraseñas protegidas con BCrypt
-- Gestión de empresas
-- Arquitectura multiempresa mediante membresías
-- Roles `OWNER`, `MANAGER` y `EMPLOYEE`
-- Gestión de locales o centros de trabajo
-- Creación y edición de turnos
-- Ciclo de vida de turnos
-- Asignación de empleados a turnos
-- Creación de relevos entre turnos
-- Edición de relevos mientras están en borrador
-- Envío y confirmación de recepción de relevos
-- Registro de incidencias y tareas pendientes
-- Prioridades y estados para los pendientes
-- Resolución de pendientes
-- Continuidad de asuntos no resueltos entre turnos
-- Dashboard de actividad
-- Interfaz web responsive
-- API REST protegida
-- Migraciones de base de datos con Flyway
-- Documentación interactiva con Swagger / OpenAPI
-- Tests automatizados
-- Integración continua con GitHub Actions
+Vista general del turno en curso y de los asuntos que todavía requieren atención.
+
+![Actividad del local en ShiftLink](docs/screenshots/01-actividad-local.png)
+
+### Relevo entre turnos
+
+El turno saliente entrega contexto, incidencias y tareas al siguiente equipo.
+
+![Relevo para el siguiente turno](docs/screenshots/02-relevo-saliente.png)
+
+### Recepción y continuidad
+
+El turno receptor consulta el relevo, mantiene el estado de los pendientes y puede resolverlos.
+
+![Relevo recibido en ShiftLink](docs/screenshots/03-relevo-recibido.png)
+
+---
+
+## Qué problema resuelve
+
+En muchos equipos, el cambio de turno todavía depende de mensajes, notas, comunicación verbal o grupos informales. Eso puede provocar pérdida de información, tareas olvidadas y poca trazabilidad.
+
+ShiftLink estructura el proceso alrededor de una relación clara:
+
+```text
+Empresa
+  ↓
+Local
+  ↓
+Turno
+  ↓
+Relevo
+  ↓
+Incidencias y tareas
+```
 
 ## Flujo principal
 
 ```text
-Empleado asignado a un turno
-          |
-          v
-Trabaja durante el turno
-          |
-          v
-Registra incidencias o tareas
-          |
-          v
-Crea el relevo
-          |
-          v
+Empleado trabaja en un turno
+          ↓
+Registra incidencias y tareas
+          ↓
+Prepara el relevo
+          ↓
 Selecciona el turno de destino
-          |
-          v
+          ↓
 Envía el relevo
-          |
-          v
+          ↓
 El siguiente turno lo recibe
-          |
-          v
+          ↓
 Confirma la recepción
-          |
-          v
-Resuelve los asuntos pendientes
-          |
-          v
-Los asuntos no resueltos pueden
-continuar en el siguiente relevo
+          ↓
+Resuelve los pendientes
+          ↓
+Los asuntos abiertos pueden continuar
+en el siguiente relevo
 ```
+
+## Funcionalidades principales
+
+### Empresas y permisos
+
+- Arquitectura multiempresa mediante membresías.
+- Roles `OWNER`, `MANAGER` y `EMPLOYEE`.
+- Control de acceso por empresa.
+- Reglas de autorización adicionales en la capa de servicios.
+
+### Locales y turnos
+
+- Gestión de locales o centros de trabajo.
+- Creación y edición de turnos.
+- Asignación de empleados.
+- Prevención de asignaciones duplicadas.
+- Ciclo de vida de turnos: `SCHEDULED`, `ACTIVE`, `COMPLETED` y `CANCELLED`.
+
+### Relevos
+
+- Creación de relevos entre turnos.
+- Edición mientras permanecen en borrador.
+- Selección del turno receptor.
+- Envío del relevo.
+- Confirmación de recepción.
+- Estados `DRAFT`, `SUBMITTED` y `ACKNOWLEDGED`.
+
+### Incidencias y tareas
+
+- Tipos `INCIDENT` y `TASK`.
+- Prioridades `LOW`, `MEDIUM` y `HIGH`.
+- Estados `OPEN` y `RESOLVED`.
+- Continuidad de pendientes no resueltos entre turnos.
+- Trazabilidad del estado de cada asunto.
+
+## Demo aislada por visitante
+
+La demo pública no utiliza una cuenta compartida.
+
+Cuando un visitante pulsa **Entrar en demo**, el backend crea automáticamente un entorno independiente con:
+
+```text
+Usuario demo
+    ↓
+Empresa independiente
+    ↓
+Local
+    ↓
+3 turnos
+    ↓
+Empleados
+    ↓
+Asignaciones
+    ↓
+Relevos
+    ↓
+Incidencias y tareas
+```
+
+Cada sesión recibe su propio JWT y sus propios datos.
+
+Las demos son temporales y el backend incluye limpieza de sesiones caducadas, límite de sesiones activas y protección frente a creación excesiva de demos.
 
 ## Stack tecnológico
 
@@ -92,6 +150,7 @@ continuar en el siguiente relevo
 - Vite
 - CSS
 - Fetch API
+- PWA
 - Diseño responsive
 
 ### Backend
@@ -112,175 +171,33 @@ continuar en el siguiente relevo
 - PostgreSQL
 - Flyway
 
-### Infraestructura y herramientas
+### Infraestructura
 
 - Docker
 - Docker Compose
-- Git
-- GitHub
+- Render
+- Neon PostgreSQL
 - GitHub Actions
-- Swagger
-- OpenAPI
+- Git
 
 ## Arquitectura
 
-ShiftLink utiliza una arquitectura cliente-servidor.
-
-```text
-React + TypeScript
-        |
-        | HTTP / JSON
-        v
-Spring Boot REST API
-        |
-        +-- Controllers
-        |
-        +-- Services
-        |
-        +-- Repositories
-        |
-        +-- Spring Security
-        |
-        +-- JWT
-        |
-        v
-PostgreSQL
+```mermaid
+flowchart TD
+    A[React + TypeScript] -->|HTTP / JSON| B[Spring Boot REST API]
+    B --> C[Spring Security + JWT]
+    B --> D[Controllers]
+    D --> E[Services]
+    E --> F[Repositories]
+    F --> G[PostgreSQL]
+    H[Flyway] --> G
 ```
 
-El frontend no accede directamente a la base de datos. Toda la lógica de negocio y las reglas de autorización se gestionan desde el backend.
+El frontend no accede directamente a PostgreSQL. La lógica de negocio, validaciones y reglas de autorización se ejecutan en el backend.
 
-## Modelo multiempresa
+## Seguridad
 
-ShiftLink permite que un usuario pueda pertenecer a diferentes empresas mediante membresías.
-
-```text
-User
- |
- v
-Membership
- |
- +-- OWNER
- |
- +-- MANAGER
- |
- +-- EMPLOYEE
- |
- v
-Company
- |
- v
-Location
- |
- v
-Shift
-```
-
-Los permisos dependen de la relación del usuario con cada empresa.
-
-## Gestión de turnos
-
-Los turnos disponen de un ciclo de vida controlado por el backend.
-
-Estados disponibles:
-
-```text
-SCHEDULED
-ACTIVE
-COMPLETED
-CANCELLED
-```
-
-Entre las reglas implementadas se encuentran:
-
-- Solo los turnos programados pueden modificarse.
-- Un turno debe tener una hora de finalización posterior a la de inicio.
-- Los responsables pueden iniciar, completar o cancelar turnos.
-- Los empleados pueden ser asignados a turnos concretos.
-- Las asignaciones duplicadas están bloqueadas.
-
-## Relevos
-
-Un relevo conecta un turno de origen con un turno de destino.
-
-Estados:
-
-```text
-DRAFT
-SUBMITTED
-ACKNOWLEDGED
-```
-
-El flujo permite:
-
-```text
-Turno origen
-    |
-    v
-Borrador de relevo
-    |
-    v
-Añadir incidencias y tareas
-    |
-    v
-Enviar relevo
-    |
-    v
-Turno destino
-    |
-    v
-Confirmar recepción
-```
-
-Las reglas de negocio impiden, entre otras situaciones:
-
-- Crear varios relevos para el mismo turno de origen.
-- Utilizar el mismo turno como origen y destino.
-- Modificar un relevo después de enviarlo.
-- Enviar un relevo por parte de un usuario no autorizado.
-- Confirmar un relevo sin estar asignado al turno receptor.
-- Confirmar el propio relevo como receptor.
-
-## Incidencias y tareas
-
-Los elementos de un relevo pueden clasificarse como:
-
-```text
-INCIDENT
-TASK
-```
-
-Prioridades:
-
-```text
-LOW
-MEDIUM
-HIGH
-```
-
-Estados:
-
-```text
-OPEN
-RESOLVED
-```
-
-Los asuntos que continúan abiertos pueden trasladarse al siguiente relevo.
-
-ShiftLink mantiene la relación entre el elemento original y su continuación para evitar duplicados y conservar la trazabilidad.
-
-## Autenticación y seguridad
-
-La aplicación utiliza autenticación mediante JWT Bearer Token.
-
-Endpoints públicos principales:
-
-```text
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/health
-```
-
-El resto de la API requiere autenticación.
+ShiftLink utiliza autenticación stateless mediante JWT Bearer Token.
 
 ```http
 Authorization: Bearer <JWT>
@@ -291,17 +208,22 @@ La aplicación utiliza:
 - BCrypt para almacenar contraseñas.
 - JWT firmado mediante HMAC SHA-256.
 - Spring Security.
-- Sesiones stateless.
-- Control de acceso por empresa y membresía.
-- Comprobaciones adicionales de permisos en la capa de servicios.
+- OAuth2 Resource Server.
+- Control de acceso mediante membresías y roles.
+- Comprobaciones de autorización en la capa de servicios.
 
-## Base de datos y migraciones
+Endpoints públicos principales:
 
-El esquema de PostgreSQL se gestiona exclusivamente mediante Flyway.
+```text
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/demo
+GET  /api/health
+```
 
-Actualmente existen migraciones desde `V1` hasta `V10`.
+## Modelo de datos
 
-Entre las principales entidades se encuentran:
+Principales entidades:
 
 ```text
 users
@@ -314,64 +236,42 @@ handovers
 handover_items
 ```
 
-Flyway permite que una instalación nueva pueda construir automáticamente el esquema completo de la aplicación siguiendo el historial de migraciones.
+El esquema se gestiona mediante migraciones versionadas con Flyway.
 
-## API REST
+## Reglas de negocio destacadas
 
-El backend expone una API REST para las principales áreas de la aplicación:
-
-```text
-Authentication
-Companies
-Memberships
-Locations
-Shifts
-Shift Assignments
-Handovers
-Handover Items
-```
-
-La lógica está separada en controladores, servicios y repositorios para mantener las responsabilidades desacopladas.
-
-## Swagger y OpenAPI
-
-La API dispone de documentación interactiva mediante Springdoc OpenAPI.
-
-Con el backend en ejecución:
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-Especificación OpenAPI:
-
-```text
-http://localhost:8080/v3/api-docs
-```
-
-Swagger permite inspeccionar los endpoints disponibles, sus parámetros y respuestas, además de realizar peticiones autenticadas mediante JWT.
+- Un turno debe finalizar después de comenzar.
+- Solo determinados estados permiten modificar un turno.
+- Las asignaciones duplicadas están bloqueadas.
+- Solo usuarios autorizados pueden gestionar empleados.
+- Un usuario debe estar asignado al turno para crear su relevo.
+- Un turno no puede tener varios relevos de salida.
+- El turno de origen y el de destino deben ser diferentes.
+- Un relevo enviado deja de ser editable.
+- Solo un usuario asignado al turno receptor puede confirmar la recepción.
+- El creador del relevo no puede confirmarlo como receptor.
+- Los pendientes mantienen su estado durante el traspaso.
+- Los asuntos abiertos pueden continuar en relevos posteriores.
 
 ## Testing
 
-El backend dispone de tests automatizados con JUnit y Mockito.
+El backend dispone actualmente de **27 tests automatizados** con JUnit 5, Mockito, AssertJ y Spring Boot Test.
 
-Actualmente la suite comprueba, entre otras reglas:
+La suite cubre, entre otras áreas:
 
-- Validaciones del ciclo de vida de los turnos.
-- Restricciones al modificar turnos.
+- Ciclo de vida y edición de turnos.
 - Asignaciones duplicadas.
 - Membresías inactivas.
-- Permisos para asignar empleados.
-- Creación de relevos.
-- Envío de relevos.
-- Confirmación de recepción.
+- Permisos.
+- Creación, envío y confirmación de relevos.
 - Restricciones de edición.
 - Continuidad de pendientes.
-- Prevención de duplicados al trasladar pendientes.
+- Prevención de duplicados.
+- Creación de demos independientes.
+- Limitación de sesiones demo.
+- Respuesta HTTP `429` al superar límites.
 
-La suite actual ejecuta 24 tests correctamente.
-
-Ejecutar los tests:
+Ejecutar:
 
 ```bash
 cd backend
@@ -380,14 +280,12 @@ cd backend
 
 ## Integración continua
 
-El repositorio utiliza GitHub Actions.
-
-Cada `push` o `pull request` sobre `main` ejecuta automáticamente dos procesos.
+GitHub Actions valida cada cambio sobre `main`.
 
 Backend:
 
 ```text
-PostgreSQL 17
+PostgreSQL
 Java 21
 Flyway
 Maven
@@ -397,39 +295,60 @@ Tests
 Frontend:
 
 ```text
-Node.js 20
+Node.js
 npm ci
 ESLint
+TypeScript
 Vite build
 ```
 
-De esta forma, cada cambio se comprueba automáticamente antes de considerarse válido.
+## Despliegue
 
-Workflow:
+La aplicación está desplegada actualmente con:
 
 ```text
-.github/workflows/ci.yml
+Frontend
+React + TypeScript
+Render Static Site
+        ↓
+Backend
+Spring Boot + Docker
+Render Web Service
+        ↓
+Database
+PostgreSQL
+Neon
 ```
 
-## Ejecutar el proyecto en local
+### Producción
+
+Frontend / Demo:
+
+<a href="https://shiftlink-tldu.onrender.com">Abrir demo pública</a>
+
+Backend:
+
+<a href="https://shiftlink-api.onrender.com">Ver backend desplegado</a>
+
+## Ejecutar en local
 
 ### Requisitos
 
 - Java 21
-- Node.js 20
+- Node.js
 - npm
 - Docker
 - Docker Compose
 - Git
 
-### 1. Clonar el repositorio
+### 1. Clonar
 
 ```bash
 git clone https://github.com/Geremias93/shiftlink.git
 cd shiftlink
 ```
 
-### 2. Crear las variables de entorno
+### 2. Configurar variables
 
 ```bash
 cp .env.example .env
@@ -441,45 +360,35 @@ Generar un secreto JWT:
 openssl rand -hex 32
 ```
 
-Añadirlo al archivo `.env`:
+Añadirlo a `.env`:
 
 ```text
 JWT_SECRET=valor_generado
 ```
 
-### 3. Levantar PostgreSQL
-
-Desde la raíz del proyecto:
+### 3. PostgreSQL
 
 ```bash
 docker compose up -d postgres
 ```
 
-### 4. Arrancar el backend
+### 4. Backend
 
 ```bash
 cd backend
-
 set -a
 source ../.env
 set +a
-
 ./mvnw spring-boot:run
 ```
 
-El backend estará disponible en:
+Backend:
 
 ```text
 http://localhost:8080
 ```
 
-Comprobación:
-
-```text
-http://localhost:8080/api/health
-```
-
-### 5. Arrancar el frontend
+### 5. Frontend
 
 En otra terminal:
 
@@ -489,109 +398,66 @@ npm ci
 npm run dev
 ```
 
-La aplicación web estará disponible en:
+Frontend:
 
 ```text
 http://localhost:5173
 ```
 
-## Estructura del proyecto
+## Estructura
 
 ```text
 shiftlink/
-|
-+-- backend/
-|   |
-|   +-- src/main/java/
-|   +-- src/main/resources/
-|   |   +-- db/migration/
-|   |
-|   +-- src/test/
-|
-+-- frontend/
-|   |
-|   +-- src/components/
-|   +-- src/services/
-|   +-- src/types/
-|   +-- src/utils/
-|
-+-- .github/
-|   +-- workflows/
-|       +-- ci.yml
-|
-+-- docker-compose.yml
-+-- .env.example
-+-- README.md
+├── backend/
+│   ├── src/main/java/
+│   ├── src/main/resources/
+│   │   └── db/migration/
+│   └── src/test/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── services/
+│       ├── types/
+│       └── utils/
+├── .github/
+│   └── workflows/
+├── docker-compose.yml
+├── .env.example
+└── README.md
 ```
 
-## Estado actual
+## Aspectos técnicos que demuestra el proyecto
 
-ShiftLink dispone actualmente de un MVP Full Stack funcional con:
-
-```text
-Frontend React + TypeScript
-        +
-API REST Spring Boot
-        +
-Autenticación JWT
-        +
-PostgreSQL
-        +
-Flyway
-        +
-Roles y permisos
-        +
-Gestión de turnos
-        +
-Asignaciones
-        +
-Relevos
-        +
-Continuidad de pendientes
-        +
-Tests automatizados
-        +
-Swagger / OpenAPI
-        +
-GitHub Actions
-```
-
-El proyecto continúa evolucionando hacia una versión pública desplegada y preparada para demostraciones.
-
-## Próximos pasos
-
-Las siguientes mejoras previstas son:
-
-- Despliegue público del frontend, backend y PostgreSQL.
-- Identidad visual y logotipo definitivo de ShiftLink.
-- Configuración completa como PWA.
-- Navegación mediante rutas persistentes.
-- Mejoras finales de experiencia de usuario y responsive.
-- Capturas y material de presentación del producto.
-- Archivos adjuntos y fotografías.
-- Sistema de invitaciones.
-- Funcionalidades adicionales para responsables.
-- Evaluación futura de entrada de relevos mediante voz e inteligencia artificial.
-
-Las funcionalidades relacionadas con inteligencia artificial se plantean como una ampliación futura y no forman parte del núcleo actual del MVP.
-
-## Objetivo del proyecto
-
-ShiftLink se desarrolla como un producto SaaS real y como proyecto Full Stack de portfolio.
-
-El proyecto busca demostrar experiencia práctica en:
+ShiftLink se ha desarrollado para trabajar sobre problemas habituales en aplicaciones empresariales:
 
 - Diseño de APIs REST.
 - Arquitectura backend por capas.
-- Desarrollo frontend con React y TypeScript.
-- Seguridad con Spring Security y JWT.
-- Modelado de bases de datos relacionales.
-- Migraciones versionadas.
-- Implementación de reglas de negocio.
+- Autenticación y autorización.
+- Arquitectura multiempresa.
+- Modelado relacional.
+- Gestión de estados.
+- Reglas de negocio.
+- Integridad de datos.
+- Migraciones.
 - Testing automatizado.
-- Docker.
 - Integración continua.
-- Git y GitHub.
+- Contenedores.
+- Despliegue cloud.
+- Integración frontend/backend.
+- Creación automática de entornos de demostración aislados.
+
+## Próximas mejoras
+
+Posibles evoluciones futuras:
+
+- Archivos adjuntos y fotografías.
+- Sistema de invitaciones.
+- Funcionalidades adicionales para responsables.
+- Mejoras de navegación y experiencia de usuario.
+- Entrada de información mediante voz.
+- Evaluación de funcionalidades asistidas por IA.
+
+Estas mejoras no son necesarias para el funcionamiento del MVP actual.
 
 ## Autor
 
