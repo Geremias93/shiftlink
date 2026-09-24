@@ -7,6 +7,7 @@ import { ShiftCard } from './components/ShiftCard'
 import { ShiftForm } from './components/ShiftForm'
 import { ShiftPersonCard } from './components/ShiftPersonCard'
 import { AssignMemberForm } from './components/AssignMemberForm'
+import { ShiftEmptyState } from './components/ShiftEmptyState'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
@@ -1683,15 +1684,10 @@ function App() {
                 )}
 
                 {assignments.length === 0 ? (
-                  <div className="shift-empty-state">
-                    <strong>
-                      Sin empleados asignados
-                    </strong>
-                    <span>
-                      Todavía no hay nadie asignado a este
-                      turno.
-                    </span>
-                  </div>
+                  <ShiftEmptyState
+                    title="Sin empleados asignados"
+                    description="Todavía no hay nadie asignado a este turno."
+                  />
                 ) : (
                   <div className="shift-people-list">
                     {assignments.map((assignment) => (
@@ -2276,15 +2272,10 @@ function App() {
               </div>
 
               {incomingHandovers.length === 0 ? (
-                <div className="shift-empty-state">
-                  <strong>
-                    No hay relevos recibidos
-                  </strong>
-                  <span>
-                    Los relevos enviados a este turno
-                    aparecerán aquí.
-                  </span>
-                </div>
+                <ShiftEmptyState
+                  title="No hay relevos recibidos"
+                  description="Los relevos enviados a este turno aparecerán aquí."
+                />
               ) : (
                 <div className="incoming-handovers-grid">
                   {incomingHandovers.map((handover) => (
