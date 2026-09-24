@@ -17,6 +17,7 @@ import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
 import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
+import { getLocationActivity } from './services/locationService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -310,42 +311,22 @@ function App() {
 
     const companyId = selectedCompany.id
     const locationId = selectedLocation.id
+    const accessToken = token
 
     async function loadLocationData() {
       setLoadingLocationData(true)
       setError('')
 
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      }
-
       try {
-        const [shiftsResponse, itemsResponse] =
-          await Promise.all([
-            fetch(
-              `/api/companies/${companyId}/locations/${locationId}/shifts`,
-              { headers },
-            ),
-            fetch(
-              `/api/companies/${companyId}/locations/${locationId}/open-items`,
-              { headers },
-            ),
-          ])
-
-        if (!shiftsResponse.ok || !itemsResponse.ok) {
-          throw new Error(
-            'No se ha podido cargar la actividad del local',
+        const { shifts, openItems } =
+          await getLocationActivity(
+            companyId,
+            locationId,
+            accessToken,
           )
-        }
 
-        const shiftsData: Shift[] =
-          await shiftsResponse.json()
-
-        const itemsData: HandoverItem[] =
-          await itemsResponse.json()
-
-        setShifts(shiftsData)
-        setOpenItems(itemsData)
+        setShifts(shifts)
+        setOpenItems(openItems)
       } catch (err) {
         setError(
           err instanceof Error
