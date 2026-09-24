@@ -28,6 +28,15 @@ import {
   createShift,
   getShiftDetail,
 } from './services/shiftService'
+import {
+  createHandoverItem,
+  carryOpenItems,
+  updateHandover,
+  resolveHandoverItem,
+  acknowledgeHandover,
+  submitHandover,
+  createHandover,
+} from './services/handoverService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -587,28 +596,16 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover`,
+      const data = await createHandover(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
         {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetShiftId: handoverTargetShiftId,
-            notes: handoverNotes.trim() || null,
-          }),
+          targetShiftId: handoverTargetShiftId,
+          notes: handoverNotes.trim() || null,
         },
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido guardar el borrador del relevo',
-        )
-      }
-
-      const data: Handover = await response.json()
 
       setOutgoingHandover(data)
       setShowHandoverForm(false)
@@ -640,23 +637,12 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/submit`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await submitHandover(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido enviar el relevo',
-        )
-      }
-
-      const data: Handover = await response.json()
 
       setOutgoingHandover(data)
     } catch (err) {
@@ -685,23 +671,12 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${handover.shiftId}/handover/acknowledge`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await acknowledgeHandover(
+        selectedCompany.id,
+        selectedLocation.id,
+        handover.shiftId,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido confirmar la recepción del relevo',
-        )
-      }
-
-      const data: Handover = await response.json()
 
       setIncomingHandovers((current) =>
         current.map((item) =>
@@ -736,23 +711,13 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${handover.shiftId}/handover/items/${item.id}/resolve`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await resolveHandoverItem(
+        selectedCompany.id,
+        selectedLocation.id,
+        handover.shiftId,
+        item.id,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido resolver el pendiente',
-        )
-      }
-
-      const data: HandoverItem = await response.json()
 
       setIncomingHandoverItems((current) => ({
         ...current,
@@ -801,27 +766,15 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover`,
+      const data = await updateHandover(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
         {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            notes: handoverNotes.trim() || null,
-          }),
+          notes: handoverNotes.trim() || null,
         },
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido actualizar el borrador',
-        )
-      }
-
-      const data: Handover = await response.json()
 
       setOutgoingHandover(data)
       setShowHandoverForm(false)
@@ -1084,23 +1037,13 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/items/carry-from/${sourceHandover.shiftId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const data = await carryOpenItems(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        sourceHandover.shiftId,
+        token,
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se han podido arrastrar los pendientes anteriores',
-        )
-      }
-
-      const data: HandoverItem[] = await response.json()
 
       if (data.length === 0) {
         setCarryItemsMessage(
@@ -1160,32 +1103,19 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(
-        `/api/companies/${selectedCompany.id}/locations/${selectedLocation.id}/shifts/${selectedShift.id}/handover/items`,
+      const data = await createHandoverItem(
+        selectedCompany.id,
+        selectedLocation.id,
+        selectedShift.id,
+        token,
         {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type: handoverItemType,
-            title: handoverItemTitle.trim(),
-            description:
-              handoverItemDescription.trim() || null,
-            priority: handoverItemPriority,
-          }),
+          type: handoverItemType,
+          title: handoverItemTitle.trim(),
+          description:
+            handoverItemDescription.trim() || null,
+          priority: handoverItemPriority,
         },
       )
-
-      if (!response.ok) {
-        throw new Error(
-          'No se ha podido añadir el pendiente',
-        )
-      }
-
-      const data: HandoverItem =
-        await response.json()
 
       setHandoverItems((current) => [
         ...current,
