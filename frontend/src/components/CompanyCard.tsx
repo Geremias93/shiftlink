@@ -28,7 +28,11 @@ export function CompanyCard({
 
       <div className="company-card-content">
         <h2>{company.name}</h2>
-        <p>{company.slug}</p>
+        <p>
+          {company.slug.startsWith('demo-')
+            ? 'Entorno de demostración'
+            : company.slug}
+        </p>
       </div>
 
       <div className="company-card-footer">
