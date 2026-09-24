@@ -4,6 +4,7 @@ import { WorkspaceNav } from './components/WorkspaceNav'
 import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
+import { CreateShiftForm } from './components/CreateShiftForm'
 import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
@@ -2787,91 +2788,22 @@ function App() {
 
 
                 {showCreateShiftForm && (
-                  <form
-                    className="shift-create-form"
+                  <CreateShiftForm
+                    name={newShiftName}
+                    startsAt={newShiftStartsAt}
+                    endsAt={newShiftEndsAt}
+                    saving={savingShift}
+                    onNameChange={setNewShiftName}
+                    onStartsAtChange={setNewShiftStartsAt}
+                    onEndsAtChange={setNewShiftEndsAt}
                     onSubmit={handleCreateShift}
-                  >
-                    <div className="handover-form-heading">
-                      <strong>Nuevo turno</strong>
-                      <span>
-                        Define el nombre y el horario del turno.
-                      </span>
-                    </div>
-
-                    <label className="handover-field">
-                      <span>Nombre</span>
-
-                      <input
-                        type="text"
-                        maxLength={120}
-                        value={newShiftName}
-                        onChange={(event) =>
-                          setNewShiftName(event.target.value)
-                        }
-                        placeholder="Ej.: Turno de mañana"
-                      />
-                    </label>
-
-                    <div className="handover-item-form-row">
-                      <label className="handover-field">
-                        <span>Inicio</span>
-
-                        <input
-                          type="datetime-local"
-                          value={newShiftStartsAt}
-                          onChange={(event) =>
-                            setNewShiftStartsAt(
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label className="handover-field">
-                        <span>Fin</span>
-
-                        <input
-                          type="datetime-local"
-                          value={newShiftEndsAt}
-                          onChange={(event) =>
-                            setNewShiftEndsAt(
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
-                    </div>
-
-                    <div className="handover-form-actions">
-                      <button
-                        className="shift-secondary-action"
-                        type="button"
-                        onClick={() => {
-                          setShowCreateShiftForm(false)
-                          setNewShiftName('')
-                          setNewShiftStartsAt('')
-                          setNewShiftEndsAt('')
-                        }}
-                      >
-                        Cancelar
-                      </button>
-
-                      <button
-                        className="shift-primary-action"
-                        type="submit"
-                        disabled={
-                          savingShift ||
-                          !newShiftName.trim() ||
-                          !newShiftStartsAt ||
-                          !newShiftEndsAt
-                        }
-                      >
-                        {savingShift
-                          ? 'Creando...'
-                          : 'Crear turno'}
-                      </button>
-                    </div>
-                  </form>
+                    onCancel={() => {
+                      setShowCreateShiftForm(false)
+                      setNewShiftName('')
+                      setNewShiftStartsAt('')
+                      setNewShiftEndsAt('')
+                    }}
+                  />
                 )}
 
                 <div className="shifts-grid">
