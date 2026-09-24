@@ -13,7 +13,7 @@ import { CurrentShiftCard } from './components/CurrentShiftCard'
 import { NextShiftCard } from './components/NextShiftCard'
 import { AllClearState } from './components/AllClearState'
 import { PendingItemCard } from './components/PendingItemCard'
-import { IncomingHandoverItemCard } from './components/IncomingHandoverItemCard'
+import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -2200,115 +2200,30 @@ function App() {
               ) : (
                 <div className="incoming-handovers-grid">
                   {incomingHandovers.map((handover) => (
-                    <article
-                      className="handover-card"
+                    <IncomingHandoverCard
                       key={handover.id}
-                    >
-                      <div className="handover-card-top">
-                        <span
-                          className={`handover-status handover-status-${handover.status.toLowerCase()}`}
-                        >
-                          {handoverStatusLabel(
-                            handover.status,
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="handover-route">
-                        <span>Origen</span>
-                        <strong>
-                          {shifts.find(
-                            (shift) =>
-                              shift.id ===
-                              handover.shiftId,
-                          )?.name ?? 'Turno anterior'}
-                        </strong>
-                      </div>
-
-                      <div className="handover-notes">
-                        <span>Notas del relevo</span>
-                        <p>
-                          {handover.notes ||
-                            'Sin notas añadidas.'}
-                        </p>
-                      </div>
-
-
-                      <div className="handover-items-block">
-                        <div className="handover-items-heading">
-                          <span>Pendientes del relevo</span>
-
-                          <strong>
-                            {
-                              (
-                                incomingHandoverItems[
-                                  handover.id
-                                ] ?? []
-                              ).length
-                            }
-                          </strong>
-                        </div>
-
-                        {(
-                          incomingHandoverItems[
-                            handover.id
-                          ] ?? []
-                        ).length === 0 ? (
-                          <p className="handover-items-empty">
-                            No hay tareas ni incidencias en este
-                            relevo.
-                          </p>
-                        ) : (
-                          <div className="handover-items-list">
-                            {(
-                              incomingHandoverItems[
-                                handover.id
-                              ] ?? []
-                            ).map((item) => (
-                              <IncomingHandoverItemCard
-                                key={item.id}
-                                item={item}
-                                resolving={
-                                  resolvingHandoverItemId === item.id
-                                }
-                                onResolve={(itemToResolve) =>
-                                  handleResolveIncomingItem(
-                                    handover,
-                                    itemToResolve,
-                                  )
-                                }
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {handover.status === 'SUBMITTED' &&
+                      handover={handover}
+                      originShiftName={
+                        shifts.find(
+                          (shift) => shift.id === handover.shiftId,
+                        )?.name ?? 'Turno anterior'
+                      }
+                      items={
+                        incomingHandoverItems[handover.id] ?? []
+                      }
+                      canAcknowledge={
+                        handover.status === 'SUBMITTED' &&
                         isCurrentUserAssigned &&
                         handover.createdByUserId !==
-                          currentMembership?.userId && (
-                        <div className="handover-card-actions">
-                          <button
-                            className="shift-primary-action"
-                            type="button"
-                            disabled={
-                              acknowledgingHandoverId ===
-                              handover.id
-                            }
-                            onClick={() =>
-                              handleAcknowledgeHandover(
-                                handover,
-                              )
-                            }
-                          >
-                            {acknowledgingHandoverId ===
-                            handover.id
-                              ? 'Confirmando...'
-                              : 'Confirmar recepción'}
-                          </button>
-                        </div>
-                      )}
-                    </article>
+                          currentMembership?.userId
+                      }
+                      acknowledging={
+                        acknowledgingHandoverId === handover.id
+                      }
+                      resolvingItemId={resolvingHandoverItemId}
+                      onResolve={handleResolveIncomingItem}
+                      onAcknowledge={handleAcknowledgeHandover}
+                    />
                   ))}
                 </div>
               )}
