@@ -59,9 +59,43 @@ import type {
   ShiftAssignment,
 } from './types'
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+}
+
+type NavigatorWithStandalone = Navigator & {
+  standalone?: boolean
+}
+
 function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const [deferredInstallPrompt, setDeferredInstallPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null)
+
+  const [isAppInstalled, setIsAppInstalled] = useState(() =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as NavigatorWithStandalone).standalone === true,
+  )
+
+  const [showIosInstallHelp, setShowIosInstallHelp] =
+    useState(false)
+
+  const isIosDevice =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (
+      navigator.platform === 'MacIntel' &&
+      navigator.maxTouchPoints > 1
+    )
+
+  const canInstallApp =
+    !isAppInstalled &&
+    (deferredInstallPrompt !== null || isIosDevice)
 
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem('shiftlink_access_token'),
@@ -214,6 +248,44 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [loadingCompanies, setLoadingCompanies] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    function handleBeforeInstallPrompt(event: Event) {
+      event.preventDefault()
+
+      setDeferredInstallPrompt(
+        event as BeforeInstallPromptEvent,
+      )
+    }
+
+    function handleAppInstalled() {
+      setDeferredInstallPrompt(null)
+      setIsAppInstalled(true)
+      setShowIosInstallHelp(false)
+    }
+
+    window.addEventListener(
+      'beforeinstallprompt',
+      handleBeforeInstallPrompt,
+    )
+
+    window.addEventListener(
+      'appinstalled',
+      handleAppInstalled,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt,
+      )
+
+      window.removeEventListener(
+        'appinstalled',
+        handleAppInstalled,
+      )
+    }
+  }, [])
 
   useEffect(() => {
     if (!token) {
@@ -1194,6 +1266,22 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleInstallApp() {
+    if (isIosDevice) {
+      setShowIosInstallHelp(true)
+      return
+    }
+
+    if (!deferredInstallPrompt) {
+      return
+    }
+
+    await deferredInstallPrompt.prompt()
+    await deferredInstallPrompt.userChoice
+
+    setDeferredInstallPrompt(null)
   }
 
   function handleLogout() {
@@ -2259,7 +2347,39 @@ function App() {
           subtitle="Gestión de relevos"
           actionLabel="Cerrar sesión"
           onAction={handleLogout}
+          secondaryActionLabel={
+            canInstallApp
+              ? 'Instalar ShiftLink'
+              : undefined
+          }
+          onSecondaryAction={
+            canInstallApp
+              ? handleInstallApp
+              : undefined
+          }
         />
+
+        {showIosInstallHelp && (
+          <div
+            className="install-help-banner"
+            role="status"
+          >
+            <div>
+              <strong>Instalar ShiftLink en iPhone o iPad</strong>
+              <p>
+                Abre ShiftLink en Safari, pulsa Compartir y
+                selecciona Añadir a pantalla de inicio.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowIosInstallHelp(false)}
+            >
+              Entendido
+            </button>
+          </div>
+        )}
 
         <main className="workspace-content">
           <section className="workspace-hero">

@@ -556,6 +556,65 @@
   font-size: 11px;
 }
 
+.workspace-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.install-button {
+  padding: 10px 16px;
+  border: 1px solid #315fda;
+  border-radius: 9px;
+  background: #315fda;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.install-button:hover {
+  background: #284fba;
+  border-color: #284fba;
+  box-shadow: 0 4px 12px rgba(49, 95, 218, 0.2);
+}
+
+.install-help-banner {
+  width: min(calc(100% - 48px), 1180px);
+  margin: 18px auto 0;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #dfe6f2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(30, 45, 75, 0.06);
+}
+
+.install-help-banner strong {
+  color: #172033;
+}
+
+.install-help-banner p {
+  margin: 4px 0 0;
+  color: #68758c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.install-help-banner button {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border: 1px solid #dce2ed;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #536078;
+  font-weight: 650;
+  cursor: pointer;
+}
+
 .logout-button {
   padding: 10px 16px;
   border: 1px solid #dce2ed;
@@ -817,6 +876,22 @@
 
   .workspace-brand span {
     display: none;
+  }
+
+  .workspace-nav-actions {
+    gap: 6px;
+  }
+
+  .install-button,
+  .logout-button {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .install-help-banner {
+    width: min(calc(100% - 32px), 1180px);
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .workspace-content {

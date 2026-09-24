@@ -4,12 +4,16 @@ type WorkspaceNavProps = {
   subtitle: string
   actionLabel: string
   onAction: () => void
+  secondaryActionLabel?: string
+  onSecondaryAction?: () => void
 }
 
 export function WorkspaceNav({
   subtitle,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
 }: WorkspaceNavProps) {
   return (
     <nav className="workspace-nav">
@@ -22,13 +26,25 @@ export function WorkspaceNav({
         </div>
       </div>
 
-      <button
-        className="logout-button"
-        type="button"
-        onClick={onAction}
-      >
-        {actionLabel}
-      </button>
+      <div className="workspace-nav-actions">
+        {secondaryActionLabel && onSecondaryAction && (
+          <button
+            className="install-button"
+            type="button"
+            onClick={onSecondaryAction}
+          >
+            {secondaryActionLabel}
+          </button>
+        )}
+
+        <button
+          className="logout-button"
+          type="button"
+          onClick={onAction}
+        >
+          {actionLabel}
+        </button>
+      </div>
     </nav>
   )
 }
