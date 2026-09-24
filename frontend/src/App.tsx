@@ -1,110 +1,27 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './App.css'
+import { toDatetimeLocalValue } from './utils/date'
+import {
+  formatDetailDate,
+  formatShiftDate,
+  handoverStatusLabel,
+  itemTypeLabel,
+  priorityLabel,
+  roleLabels,
+  shiftStatusLabel,
+  shiftStatusLabels,
+} from './utils/formatters'
 
-type Company = {
-  id: string
-  name: string
-  slug: string
-  active: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-
-type Membership = {
-  membershipId: string
-  userId: string
-  firstName: string
-  lastName: string
-  email: string
-  role: 'OWNER' | 'MANAGER' | 'EMPLOYEE'
-  active: boolean
-}
-
-
-type Location = {
-  id: string
-  companyId: string
-  name: string
-  address: string
-  active: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-
-type Shift = {
-  id: string
-  locationId: string
-  name: string
-  startsAt: string
-  endsAt: string
-  status: 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
-  createdAt: string
-  updatedAt: string
-}
-
-type HandoverItem = {
-  id: string
-  handoverId: string
-  carriedFromItemId: string | null
-  type: 'INCIDENT' | 'TASK'
-  title: string
-  description: string | null
-  priority: 'LOW' | 'MEDIUM' | 'HIGH'
-  status: 'OPEN' | 'RESOLVED'
-  resolvedAt: string | null
-  resolvedByUserId: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-
-type ShiftAssignment = {
-  assignmentId: string
-  shiftId: string
-  membershipId: string
-  userId: string
-  firstName: string
-  lastName: string
-  email: string
-  role: 'OWNER' | 'MANAGER' | 'EMPLOYEE'
-  assignedByUserId: string
-  assignedByFirstName: string
-  assignedByLastName: string
-  createdAt: string
-}
-
-type Handover = {
-  id: string
-  shiftId: string
-  targetShiftId: string | null
-  createdByUserId: string
-  notes: string | null
-  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED'
-  submittedAt: string | null
-  acknowledgedAt: string | null
-  acknowledgedByUserId: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-
-function toDatetimeLocalValue(value: string) {
-  const date = new Date(value)
-
-  const pad = (number: number) =>
-    String(number).padStart(2, '0')
-
-  return (
-    `${date.getFullYear()}-` +
-    `${pad(date.getMonth() + 1)}-` +
-    `${pad(date.getDate())}T` +
-    `${pad(date.getHours())}:` +
-    `${pad(date.getMinutes())}`
-  )
-}
+import type {
+  Company,
+  Handover,
+  HandoverItem,
+  Location,
+  Membership,
+  Shift,
+  ShiftAssignment,
+} from './types'
 
 function App() {
   const [email, setEmail] = useState('')
@@ -1550,44 +1467,6 @@ function App() {
     selectedLocation &&
     selectedShift
   ) {
-    const shiftStatusLabels = {
-      SCHEDULED: 'Programado',
-      ACTIVE: 'En curso',
-      COMPLETED: 'Completado',
-      CANCELLED: 'Cancelado',
-    }
-
-    const roleLabels = {
-      OWNER: 'Propietario',
-      MANAGER: 'Responsable',
-      EMPLOYEE: 'Empleado',
-    }
-
-    function formatDetailDate(value: string) {
-      return new Intl.DateTimeFormat('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(value))
-    }
-
-    function handoverStatusLabel(
-      status: Handover['status'],
-    ) {
-      if (status === 'DRAFT') {
-        return 'Borrador'
-      }
-
-      if (status === 'SUBMITTED') {
-        return 'Pendiente de confirmar'
-      }
-
-      return 'Recepción confirmada'
-    }
-
-
     const isCurrentUserAssigned = assignments.some(
       (assignment) =>
         assignment.userId === currentMembership?.userId,
@@ -2738,44 +2617,6 @@ function App() {
             new Date(a.startsAt).getTime() -
             new Date(b.startsAt).getTime(),
         )[0] ?? null
-
-    function formatShiftDate(value: string) {
-      return new Intl.DateTimeFormat('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(value))
-    }
-
-    function shiftStatusLabel(status: Shift['status']) {
-      const labels = {
-        SCHEDULED: 'Programado',
-        ACTIVE: 'Activo',
-        COMPLETED: 'Completado',
-        CANCELLED: 'Cancelado',
-      }
-
-      return labels[status]
-    }
-
-    function itemTypeLabel(type: HandoverItem['type']) {
-      return type === 'INCIDENT'
-        ? 'Incidencia'
-        : 'Tarea'
-    }
-
-    function priorityLabel(
-      priority: HandoverItem['priority'],
-    ) {
-      const labels = {
-        LOW: 'Baja',
-        MEDIUM: 'Media',
-        HIGH: 'Alta',
-      }
-
-      return labels[priority]
-    }
 
     return (
       <div className="location-page">
