@@ -5,6 +5,7 @@ import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
 import { ShiftForm } from './components/ShiftForm'
+import { ShiftDetailHero } from './components/ShiftDetailHero'
 import { ShiftPersonCard } from './components/ShiftPersonCard'
 import { AssignMemberForm } from './components/AssignMemberForm'
 import { ShiftEmptyState } from './components/ShiftEmptyState'
@@ -17,7 +18,6 @@ import { toDatetimeLocalValue } from './utils/date'
 import {
   formatDetailDate,
   handoverStatusLabel,
-  shiftStatusLabels,
 } from './utils/formatters'
 
 import type {
@@ -1501,99 +1501,19 @@ function App() {
           Volver a turnos
         </button>
 
-        <section className="shift-detail-hero">
-          <div className="shift-detail-title">
-            <div>
-              <p className="eyebrow">TURNO</p>
-              <h1>{selectedShift.name}</h1>
-            </div>
-
-
-            <div className="shift-detail-actions">
-              <span
-                className={`shift-status-badge shift-status-${selectedShift.status.toLowerCase()}`}
-              >
-                {shiftStatusLabels[selectedShift.status]}
-              </span>
-
-              {(
-                currentMembership?.role === 'OWNER' ||
-                currentMembership?.role === 'MANAGER'
-              ) &&
-                selectedShift.status === 'SCHEDULED' && (
-                  <div className="shift-active-actions">
-                    <button
-                      className="shift-secondary-action"
-                      type="button"
-                      onClick={handleOpenEditShift}
-                    >
-                      Editar turno
-                    </button>
-
-                    <button
-                      className="shift-primary-action"
-                      type="button"
-                      disabled={changingShiftStatus}
-                      onClick={handleStartShift}
-                    >
-                      {changingShiftStatus
-                        ? 'Iniciando...'
-                        : 'Iniciar turno'}
-                    </button>
-                  </div>
-                )}
-
-              {(
-                currentMembership?.role === 'OWNER' ||
-                currentMembership?.role === 'MANAGER'
-              ) &&
-                selectedShift.status === 'ACTIVE' && (
-                  <div className="shift-active-actions">
-                    <button
-                      className="shift-danger-action"
-                      type="button"
-                      disabled={changingShiftStatus}
-                      onClick={handleCancelShift}
-                    >
-                      Cancelar turno
-                    </button>
-
-                    <button
-                      className="shift-primary-action"
-                      type="button"
-                      disabled={changingShiftStatus}
-                      onClick={handleCompleteShift}
-                    >
-                      {changingShiftStatus
-                        ? 'Procesando...'
-                        : 'Completar turno'}
-                    </button>
-                  </div>
-                )}
-            </div>
-          </div>
-
-          <div className="shift-meta-grid">
-            <div className="shift-meta-item">
-              <span>Inicio</span>
-              <strong>
-                {formatDetailDate(selectedShift.startsAt)}
-              </strong>
-            </div>
-
-            <div className="shift-meta-item">
-              <span>Fin</span>
-              <strong>
-                {formatDetailDate(selectedShift.endsAt)}
-              </strong>
-            </div>
-
-            <div className="shift-meta-item">
-              <span>Local</span>
-              <strong>{selectedLocation.name}</strong>
-            </div>
-          </div>
-        </section>
+        <ShiftDetailHero
+          shift={selectedShift}
+          locationName={selectedLocation.name}
+          canManage={
+            currentMembership?.role === 'OWNER' ||
+            currentMembership?.role === 'MANAGER'
+          }
+          changingStatus={changingShiftStatus}
+          onEdit={handleOpenEditShift}
+          onStart={handleStartShift}
+          onCancel={handleCancelShift}
+          onComplete={handleCompleteShift}
+        />
 
 
         {showEditShiftForm &&
