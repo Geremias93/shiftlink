@@ -2368,6 +2368,47 @@ function App() {
             <p>Accede a tu espacio de trabajo.</p>
           </div>
 
+          <div className="demo-access">
+            <div className="demo-access-heading">
+              <div>
+                <p className="demo-access-label">
+                  DEMO PÚBLICA
+                </p>
+                <strong>Prueba ShiftLink sin registrarte</strong>
+              </div>
+              <span className="demo-access-role">
+                Responsable
+              </span>
+            </div>
+
+            <p className="demo-access-description">
+              Explora turnos, empleados, relevos, tareas e incidencias
+              con una cuenta preparada para demostración.
+            </p>
+
+            <div className="demo-credentials">
+              <div>
+                <span>Correo</span>
+                <code>demo@shiftlink.dev</code>
+              </div>
+              <div>
+                <span>Contraseña</span>
+                <code>ShiftLinkDemo2026!</code>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="demo-access-button"
+              onClick={() => {
+                setEmail('demo@shiftlink.dev')
+                setPassword('ShiftLinkDemo2026!')
+              }}
+            >
+              Usar cuenta demo
+            </button>
+          </div>
+
           <form
             className="login-form"
             onSubmit={handleSubmit}
