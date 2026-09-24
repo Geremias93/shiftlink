@@ -1,3 +1,5 @@
+import { ShiftLinkLogo } from './ShiftLinkLogo'
+
 type WorkspaceNavProps = {
   subtitle: string
   actionLabel: string
@@ -12,7 +14,7 @@ export function WorkspaceNav({
   return (
     <nav className="workspace-nav">
       <div className="workspace-brand">
-        <div className="workspace-logo">S</div>
+        <ShiftLinkLogo className="workspace-logo" />
 
         <div>
           <strong>ShiftLink</strong>

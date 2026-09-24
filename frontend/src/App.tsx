@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { WorkspaceNav } from './components/WorkspaceNav'
+import { ShiftLinkLogo } from './components/ShiftLinkLogo'
 import { CompanyCard } from './components/CompanyCard'
 import { LocationCard } from './components/LocationCard'
 import { ShiftCard } from './components/ShiftCard'
@@ -1198,21 +1199,20 @@ function App() {
         currentMembership?.userId
 
     return (
-      <main className="shift-detail-page">
-        <button
-          className="shift-back-button"
-          type="button"
-          onClick={() => {
+      <div className="location-page">
+        <WorkspaceNav
+          subtitle={`${selectedCompany.name} · ${selectedLocation.name}`}
+          actionLabel="← Volver a turnos"
+          onAction={() => {
             setSelectedShift(null)
             setShowEditShiftForm(false)
             setAssignments([])
             setOutgoingHandover(null)
             setIncomingHandovers([])
           }}
-        >
-          <span aria-hidden="true">←</span>
-          Volver a turnos
-        </button>
+        />
+
+        <main className="shift-detail-page">
 
         <ShiftDetailHero
           shift={selectedShift}
@@ -1909,6 +1909,7 @@ function App() {
           </>
         )}
       </main>
+      </div>
     )
   }
 
@@ -2014,7 +2015,13 @@ function App() {
                     </p>
                   </div>
 
-                  <span className="section-count section-count-alert">
+                  <span
+                    className={
+                      openItems.length === 0
+                        ? 'section-count section-count-success'
+                        : 'section-count section-count-alert'
+                    }
+                  >
                     {openItems.length}
                   </span>
                 </div>
@@ -2297,14 +2304,24 @@ function App() {
   return (
     <div className="login-page">
       <section className="login-brand">
+        <div className="brand-watermark" aria-hidden="true">
+          <ShiftLinkLogo
+            className="brand-watermark-logo"
+            title=""
+          />
+        </div>
+
         <div className="brand-content">
-          <div className="brand-logo">S</div>
+          <div className="brand-lockup">
+            <ShiftLinkLogo className="brand-logo" />
+            <span>ShiftLink</span>
+          </div>
 
-          <h1>ShiftLink</h1>
-
-          <p className="brand-tagline">
-            El relevo de turno, claro para todos.
-          </p>
+          <h1 className="brand-hero-title">
+            El relevo de turno,
+            <br />
+            <span>claro</span> para todos.
+          </h1>
 
           <p className="brand-description">
             Centraliza incidencias, tareas y pendientes
@@ -2337,13 +2354,13 @@ function App() {
       <section className="login-panel">
         <div className="login-card">
           <div className="mobile-logo">
-            <div className="brand-logo">S</div>
+            <ShiftLinkLogo className="brand-logo" />
             <span>ShiftLink</span>
           </div>
 
           <div className="login-heading">
             <p className="eyebrow">
-              BIENVENIDO DE NUEVO
+              ACCESO A SHIFTLINK
             </p>
 
             <h2>Inicia sesión</h2>
@@ -2389,7 +2406,7 @@ function App() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
 
             {error && (
@@ -2399,9 +2416,6 @@ function App() {
             )}
           </form>
 
-          <p className="login-footer">
-            ShiftLink · Gestión de turnos y relevos
-          </p>
         </div>
       </section>
     </div>

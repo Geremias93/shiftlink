@@ -16,7 +16,12 @@ export function OutgoingHandoverItemCard({
       <div className="handover-item-top">
         <span>{itemTypeLabel(item.type)}</span>
 
-        <span>
+        <span
+          className={
+            `handover-priority ` +
+            `handover-priority-${item.priority.toLowerCase()}`
+          }
+        >
           Prioridad {priorityLabel(item.priority).toLowerCase()}
         </span>
       </div>
@@ -33,7 +38,13 @@ export function OutgoingHandoverItemCard({
         </span>
       )}
 
-      <small>
+      <small
+        className={
+          item.status === 'OPEN'
+            ? 'handover-item-status handover-item-status-open'
+            : 'handover-item-status handover-item-status-resolved'
+        }
+      >
         {item.status === 'OPEN'
           ? 'Pendiente'
           : 'Resuelto'}

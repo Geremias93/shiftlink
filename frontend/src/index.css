@@ -1,3 +1,47 @@
+:root {
+  --sl-navy-950: #101c3d;
+  --sl-navy-900: #17264d;
+
+  --sl-blue-600: #3563e9;
+  --sl-blue-500: #4774e7;
+  --sl-blue-400: #5b8cff;
+
+  --sl-mint-500: #34d399;
+  --sl-mint-100: #ddf8ec;
+
+  --sl-bg: #f6f8fc;
+  --sl-surface: #ffffff;
+
+  --sl-text: #17213a;
+  --sl-text-muted: #6f7b91;
+
+  --sl-border: #dce3ee;
+
+  --sl-danger: #dc4c64;
+  --sl-warning: #d99524;
+
+  --sl-radius-input: 10px;
+  --sl-radius-card: 14px;
+  --sl-radius-modal: 16px;
+
+  --sl-shadow-card:
+    0 1px 2px rgba(16, 28, 61, 0.04),
+    0 8px 24px rgba(16, 28, 61, 0.06);
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: var(--sl-text);
+  background: var(--sl-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -11,15 +55,9 @@ body,
 }
 
 body {
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  background: #f5f7fb;
-  color: #172033;
+  font-family: inherit;
+  background: var(--sl-bg);
+  color: var(--sl-text);
 }
 
 button,
