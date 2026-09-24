@@ -42,3 +42,14 @@ export async function getCompanyWorkspace(
     membership,
   }
 }
+
+export function getCompanyMembers(
+  companyId: string,
+  token: string,
+): Promise<Membership[]> {
+  return apiGet<Membership[]>(
+    `/api/companies/${companyId}/members`,
+    token,
+    'No se han podido cargar los empleados',
+  )
+}

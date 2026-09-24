@@ -16,7 +16,7 @@ import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
-import { getCompanies, getCompanyWorkspace } from './services/companyService'
+import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -280,25 +280,15 @@ function App() {
     }
 
     const companyId = selectedCompany.id
+    const accessToken = token
 
     async function loadCompanyMembers() {
       try {
-        const response = await fetch(
-          `/api/companies/${companyId}/members`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const data = await getCompanyMembers(
+          companyId,
+          accessToken,
         )
 
-        if (!response.ok) {
-          throw new Error(
-            'No se han podido cargar los empleados',
-          )
-        }
-
-        const data: Membership[] = await response.json()
         setCompanyMembers(data)
       } catch (err) {
         setError(
