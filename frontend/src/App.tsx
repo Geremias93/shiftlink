@@ -16,7 +16,7 @@ import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
 import { login } from './services/authService'
-import { getCompanies } from './services/companyService'
+import { getCompanies, getCompanyWorkspace } from './services/companyService'
 import { ApiError } from './services/apiClient'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
@@ -233,45 +233,21 @@ function App() {
     }
 
     const companyId = selectedCompany.id
+    const accessToken = token
 
     async function loadLocations() {
       setLoadingLocations(true)
       setError('')
 
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        }
-
-        const [locationsResponse, membershipResponse] =
-          await Promise.all([
-            fetch(
-              `/api/companies/${companyId}/locations`,
-              { headers },
-            ),
-            fetch(
-              `/api/companies/${companyId}/members/me`,
-              { headers },
-            ),
-          ])
-
-        if (
-          !locationsResponse.ok ||
-          !membershipResponse.ok
-        ) {
-          throw new Error(
-            'No se ha podido cargar la empresa',
+        const { locations, membership } =
+          await getCompanyWorkspace(
+            companyId,
+            accessToken,
           )
-        }
 
-        const data: Location[] =
-          await locationsResponse.json()
-
-        const membershipData: Membership =
-          await membershipResponse.json()
-
-        setLocations(data)
-        setCurrentMembership(membershipData)
+        setLocations(locations)
+        setCurrentMembership(membership)
       } catch (err) {
         setError(
           err instanceof Error
