@@ -17,13 +17,16 @@ import com.shiftlink.backend.user.UserAccount;
 public class AuthController {
 
     private final AuthService authService;
+    private final DemoSessionService demoSessionService;
     private final JwtService jwtService;
 
     public AuthController(
             AuthService authService,
+            DemoSessionService demoSessionService,
             JwtService jwtService) {
 
         this.authService = authService;
+        this.demoSessionService = demoSessionService;
         this.jwtService = jwtService;
     }
 
@@ -44,15 +47,28 @@ public class AuthController {
 
         UserAccount user = authService.login(request);
 
+        return ResponseEntity.ok(createLoginResponse(user));
+    }
+
+    @PostMapping("/demo")
+    public ResponseEntity<LoginResponse> createDemoSession() {
+
+        UserAccount user = demoSessionService.createDemoSession();
+
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(createLoginResponse(user));
+    }
+
+    private LoginResponse createLoginResponse(UserAccount user) {
+
         String accessToken = jwtService.generateToken(user);
 
-        LoginResponse response = new LoginResponse(
+        return new LoginResponse(
             accessToken,
             "Bearer",
             jwtService.getExpirationSeconds(),
             UserResponse.from(user)
         );
-
-        return ResponseEntity.ok(response);
     }
 }

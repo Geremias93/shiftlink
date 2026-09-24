@@ -16,7 +16,10 @@ import { AllClearState } from './components/AllClearState'
 import { PendingItemCard } from './components/PendingItemCard'
 import { IncomingHandoverCard } from './components/IncomingHandoverCard'
 import { OutgoingHandoverItemCard } from './components/OutgoingHandoverItemCard'
-import { login } from './services/authService'
+import {
+  createDemoSession,
+  login,
+} from './services/authService'
 import { getCompanies, getCompanyWorkspace, getCompanyMembers } from './services/companyService'
 import { getLocationActivity } from './services/locationService'
 import {
@@ -1161,6 +1164,32 @@ function App() {
         err instanceof Error
           ? err.message
           : 'No se ha podido iniciar sesión',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDemoLogin() {
+    setLoading(true)
+    setError('')
+
+    try {
+      const data = await createDemoSession()
+
+      localStorage.setItem(
+        'shiftlink_access_token',
+        data.accessToken,
+      )
+
+      setEmail('')
+      setPassword('')
+      setToken(data.accessToken)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se ha podido preparar la demo',
       )
     } finally {
       setLoading(false)
@@ -2377,35 +2406,30 @@ function App() {
                 <strong>Prueba ShiftLink sin registrarte</strong>
               </div>
               <span className="demo-access-role">
-                Responsable
+                Entorno privado
               </span>
             </div>
 
             <p className="demo-access-description">
-              Explora turnos, empleados, relevos, tareas e incidencias
-              con una cuenta preparada para demostración.
+              Crearemos un espacio de demostración independiente
+              para ti, con empresa, empleados, turnos, relevos,
+              tareas e incidencias de ejemplo.
             </p>
 
-            <div className="demo-credentials">
-              <div>
-                <span>Correo</span>
-                <code>demo@shiftlink.dev</code>
-              </div>
-              <div>
-                <span>Contraseña</span>
-                <code>ShiftLinkDemo2026!</code>
-              </div>
-            </div>
+            <p className="demo-access-note">
+              Los cambios que hagas no afectan a las demos
+              de otros visitantes.
+            </p>
 
             <button
               type="button"
               className="demo-access-button"
-              onClick={() => {
-                setEmail('demo@shiftlink.dev')
-                setPassword('ShiftLinkDemo2026!')
-              }}
+              onClick={handleDemoLogin}
+              disabled={loading}
             >
-              Usar cuenta demo
+              {loading
+                ? 'Preparando demo...'
+                : 'Entrar en demo'}
             </button>
           </div>
 

@@ -203,31 +203,11 @@
   line-height: 1.5;
 }
 
-.demo-credentials {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.demo-credentials > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.demo-credentials span {
+.demo-access-note {
+  margin: -4px 0 16px;
   color: var(--sl-text-muted);
   font-size: 12px;
-  font-weight: 650;
-}
-
-.demo-credentials code {
-  overflow-wrap: anywhere;
-  color: var(--sl-text);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 750;
+  line-height: 1.5;
 }
 
 .demo-access-button {
@@ -243,6 +223,12 @@
     border-color 0.15s ease,
     background 0.15s ease,
     transform 0.15s ease;
+}
+
+.demo-access-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
 }
 
 .demo-access-button:hover {

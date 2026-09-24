@@ -25,3 +25,27 @@ export async function login(
 
   return response.json()
 }
+
+
+export async function createDemoSession(): Promise<LoginResponse> {
+  const response = await fetch(apiUrl('/api/auth/demo'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error(
+        'Hay demasiadas demos activas ahora mismo. Inténtalo de nuevo en unos minutos.',
+      )
+    }
+
+    throw new Error(
+      'No se ha podido preparar la demo. Inténtalo de nuevo.',
+    )
+  }
+
+  return response.json()
+}
