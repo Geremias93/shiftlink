@@ -1,3 +1,11 @@
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? ''
+).replace(/\/$/, '')
+
+export function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -16,7 +24,7 @@ export async function apiGet<T>(
   token: string,
   errorMessage: string,
 ): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl(url), {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -37,7 +45,7 @@ export async function apiGetOptional<T>(
   token: string,
   errorMessage: string,
 ): Promise<T | null> {
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl(url), {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -68,7 +76,7 @@ export async function apiRequest<T>(
   errorMessage: string,
   options: ApiRequestOptions,
 ): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl(url), {
     method: options.method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -98,7 +106,7 @@ export async function apiRequestVoid(
   errorMessage: string,
   options: ApiRequestOptions,
 ): Promise<void> {
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl(url), {
     method: options.method,
     headers: {
       Authorization: `Bearer ${token}`,
