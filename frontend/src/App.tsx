@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { WorkspaceNav } from './components/WorkspaceNav'
+import { CompanyCard } from './components/CompanyCard'
+import { LocationCard } from './components/LocationCard'
 import './App.css'
 import { toDatetimeLocalValue } from './utils/date'
 import {
@@ -3095,33 +3097,11 @@ function App() {
 
             <div className="locations-grid">
               {locations.map((location) => (
-                <button
-                  className="location-card"
-                  type="button"
+                <LocationCard
                   key={location.id}
-                  onClick={() => setSelectedLocation(location)}
-                >
-                  <div className="location-card-header">
-                    <div className="location-icon">
-                      {location.name.charAt(0).toUpperCase()}
-                    </div>
-
-                    <span className="company-status">
-                      <span className="status-dot" />
-                      Activo
-                    </span>
-                  </div>
-
-                  <div className="location-card-body">
-                    <h3>{location.name}</h3>
-                    <p>{location.address}</p>
-                  </div>
-
-                  <div className="location-card-footer">
-                    <span>Ver actividad del local</span>
-                    <span className="company-arrow">→</span>
-                  </div>
-                </button>
+                  location={location}
+                  onSelect={setSelectedLocation}
+                />
               ))}
             </div>
           </section>
@@ -3191,38 +3171,11 @@ function App() {
 
           <section className="workspace-grid">
             {companies.map((company) => (
-              <button
-                className="workspace-company-card"
-                type="button"
+              <CompanyCard
                 key={company.id}
-                onClick={() => setSelectedCompany(company)}
-              >
-                <div className="company-card-top">
-                  <div className="company-avatar">
-                    {company.name
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-
-                  <span className="company-status">
-                    <span className="status-dot" />
-                    Activa
-                  </span>
-                </div>
-
-                <div className="company-card-content">
-                  <h2>{company.name}</h2>
-                  <p>{company.slug}</p>
-                </div>
-
-                <div className="company-card-footer">
-                  <span>Acceder al espacio</span>
-
-                  <span className="company-arrow">
-                    →
-                  </span>
-                </div>
-              </button>
+                company={company}
+                onSelect={setSelectedCompany}
+              />
             ))}
           </section>
         </main>
